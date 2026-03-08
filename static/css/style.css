@@ -49,7 +49,7 @@ body {
     "bottom bottom"
     "mobile mobile";
   gap: 1.2rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .neon-card,
@@ -60,7 +60,11 @@ body {
   box-shadow: 0 0 26px rgba(237, 200, 80, 0.26), 0 0 18px rgba(184, 255, 53, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.58);
 }
 
-.left-panel { grid-area: left; }
+.left-panel {
+  grid-area: left;
+  display: flex;
+  flex-direction: column;
+}
 
 .main-panel {
   grid-area: main;
@@ -69,8 +73,9 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-self: start;
+  justify-content: space-between;
+  align-self: stretch;
+  height: 100%;
 }
 
 .bottom-panels { grid-area: bottom; width: 100%; }
@@ -123,6 +128,10 @@ body {
   margin-top: 0.9rem;
   padding: 0.9rem;
   text-align: center;
+}
+
+.audio-controls .label {
+  color: #f1ecbf;
 }
 
 .audio-btn {
