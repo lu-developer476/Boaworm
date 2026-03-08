@@ -78,7 +78,18 @@ let touchStartY = 0;
 
 let audioCtx = null;
 let soundEnabled = true;
-let volumeLevel = 0.65;
+let volumeLevel = 1;
+
+function audioPercentLabel() {
+  return `${Math.round(volumeLevel * 100)}%`;
+}
+
+function updateAudioToggleLabel() {
+  if (!audioToggle) return;
+  const icon = soundEnabled ? "🔊" : "🔈";
+  const status = soundEnabled ? "Sonido activo" : "Sonido apagado";
+  audioToggle.textContent = `${icon} ${status} (${audioPercentLabel()})`;
+}
 
 function ensureAudioContext() {
   if (!audioCtx) {
@@ -1046,7 +1057,7 @@ padButtons.forEach((button) => {
 if (audioToggle) {
   audioToggle.addEventListener("click", () => {
     soundEnabled = !soundEnabled;
-    audioToggle.textContent = soundEnabled ? "🔊 Sonido activo" : "🔈 Sonido apagado";
+    updateAudioToggleLabel();
     if (soundEnabled) playEventSound("start");
   });
 }
@@ -1054,6 +1065,7 @@ if (audioToggle) {
 if (audioVolume) {
   audioVolume.addEventListener("input", (event) => {
     volumeLevel = Number(event.target.value) / 100;
+    updateAudioToggleLabel();
   });
 }
 
@@ -1092,6 +1104,7 @@ if (difficultySelect) {
 }
 
 if (yearEl) yearEl.textContent = new Date().getFullYear();
+updateAudioToggleLabel();
 
 initializeSnake();
 placeApple();
