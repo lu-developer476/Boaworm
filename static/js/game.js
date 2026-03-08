@@ -19,8 +19,8 @@ const padButtons = document.querySelectorAll(".pad-btn");
 const gameModalOverlay = document.getElementById("gameModalOverlay");
 const gameModalTitle = document.getElementById("gameModalTitle");
 const gameModalMessage = document.getElementById("gameModalMessage");
-const gameModalConfirm = document.getElementById("gameModalConfirm");
-const gameModalCancel = document.getElementById("gameModalCancel");
+const overlayAction = document.getElementById("overlayAction");
+const overlayCancel = document.getElementById("overlayCancel");
 
 const DIFFICULTY_CONFIG = {
   novato: {
@@ -484,6 +484,24 @@ function finishGame(status = "GAME OVER") {
   }
 
   updateHUD(status);
+
+  if (status === "GAME OVER") {
+    openOverlayModal({
+      title: "Game Over",
+      message: "Tu ejecución terminó. ¿Querés jugar otra vez?",
+      actionText: "Jugar otra vez",
+      cancelText: "Cancelar",
+      onConfirm: () => {
+        resetSession({ incrementSession: true });
+        isRunning = true;
+        isPaused = false;
+        updateHUD("ONLINE");
+      },
+      onCancel: () => {
+        updateHUD("GAME OVER");
+      },
+    });
+  }
 }
 
 function hitByVioletEnemy() {
@@ -545,7 +563,7 @@ function tick() {
   drawScene();
 
   if (!isRunning || isPaused) {
-    updateHUD(isPaused ? "PAUSED" : "ONLINE");
+    updateHUD(isPaused ? "Partida en pausa" : "ONLINE");
     return;
   }
 
@@ -608,111 +626,163 @@ function tick() {
 }
 
 
-function showConfirmModal({ title, message, confirmText = "Confirmar", cancelText = "Cancelar" }) {
-  if (!gameModalOverlay) {
-    return Promise.resolve(window.confirm(message));
+let overlayConfirmHandler = null;
+let overlayCancelHandler = null;
+let overlayKeydownHandler = null;
+let overlayDismissHandler = null;
+
+function closeOverlayModal() {
+  if (!gameModalOverlay) return;
+  gameModalOverlay.classList.remove("is-open");
+  gameModalOverlay.setAttribute("aria-hidden", "true");
+
+  if (overlayKeydownHandler) {
+    document.removeEventListener("keydown", overlayKeydownHandler);
   }
+
+  overlayConfirmHandler = null;
+  overlayCancelHandler = null;
+  overlayKeydownHandler = null;
+  overlayDismissHandler = null;
+}
+
+function openOverlayModal({
+  title,
+  message,
+  actionText = "Confirmar",
+  cancelText = "Cancelar",
+  hideCancel = false,
+  onConfirm = null,
+  onCancel = null,
+  onDismiss = null,
+}) {
+  if (!gameModalOverlay || !overlayAction || !overlayCancel) return;
+
+  closeOverlayModal();
 
   gameModalTitle.textContent = title;
   gameModalMessage.textContent = message;
-  gameModalConfirm.textContent = confirmText;
-  gameModalCancel.textContent = cancelText;
+  overlayAction.textContent = actionText;
+  overlayCancel.textContent = cancelText;
+  overlayCancel.classList.toggle("is-hidden", hideCancel);
+
+  overlayConfirmHandler = onConfirm;
+  overlayCancelHandler = onCancel;
+  overlayDismissHandler = onDismiss;
 
   gameModalOverlay.classList.add("is-open");
   gameModalOverlay.setAttribute("aria-hidden", "false");
 
-  return new Promise((resolve) => {
-    const close = (result) => {
-      gameModalOverlay.classList.remove("is-open");
-      gameModalOverlay.setAttribute("aria-hidden", "true");
-      gameModalConfirm.removeEventListener("click", onConfirm);
-      gameModalCancel.removeEventListener("click", onCancel);
-      gameModalOverlay.removeEventListener("click", onOverlay);
-      document.removeEventListener("keydown", onKeydown);
-      resolve(result);
-    };
+  overlayKeydownHandler = (event) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    if (overlayDismissHandler) overlayDismissHandler();
+    if (overlayCancelHandler) overlayCancelHandler();
+    closeOverlayModal();
+  };
 
-    const onConfirm = () => close(true);
-    const onCancel = () => close(false);
-    const onOverlay = (event) => {
-      if (event.target === gameModalOverlay) close(false);
-    };
-    const onKeydown = (event) => {
-      if (event.key === "Escape") close(false);
-    };
-
-    gameModalConfirm.addEventListener("click", onConfirm);
-    gameModalCancel.addEventListener("click", onCancel);
-    gameModalOverlay.addEventListener("click", onOverlay);
-    document.addEventListener("keydown", onKeydown);
-  });
+  document.addEventListener("keydown", overlayKeydownHandler);
 }
 
-async function newGameFlow() {
-  const accepted = await showConfirmModal({
+function newGameFlow() {
+  const shouldResumePauseStatus = isPaused && hasActiveSession;
+
+  openOverlayModal({
     title: "Nueva partida",
     message: "¿Desea iniciar una partida?",
-    confirmText: "Iniciar",
+    actionText: "Iniciar",
     cancelText: "Cancelar",
+    onConfirm: () => {
+      resetSession({ incrementSession: true });
+      isRunning = true;
+      isPaused = false;
+      updateHUD("ONLINE");
+    },
+    onCancel: () => {
+      updateHUD(shouldResumePauseStatus ? "Partida en pausa" : "ONLINE");
+    },
   });
-  if (!accepted) return;
-
-  resetSession({ incrementSession: true });
-  isRunning = true;
-  isPaused = false;
-  updateHUD("ONLINE");
 }
 
 function togglePause() {
-  if (!isRunning || !hasActiveSession) return;
-
-  if (!isPaused) {
-    elapsedBeforePauseMs += Date.now() - runStartTimestamp;
-    isPaused = true;
-  } else {
-    runStartTimestamp = Date.now();
-    isPaused = false;
-  }
-
-  updateHUD(isPaused ? "PAUSED" : "ONLINE");
-}
-
-async function restartGame() {
   if (!hasActiveSession) return;
 
-  const accepted = await showConfirmModal({
+  if (!isPaused && isRunning) {
+    elapsedBeforePauseMs += Date.now() - runStartTimestamp;
+    isPaused = true;
+  }
+
+  if (!isPaused) return;
+
+  updateHUD("Partida en pausa");
+  openOverlayModal({
+    title: "Partida en pausa",
+    message: "¿Querés continuar la partida actual?",
+    actionText: "Reanudar",
+    cancelText: "Cancelar",
+    onConfirm: () => {
+      runStartTimestamp = Date.now();
+      isPaused = false;
+      isRunning = true;
+      updateHUD("ONLINE");
+    },
+    onCancel: () => {
+      updateHUD("Partida en pausa");
+    },
+  });
+}
+
+function restartGame() {
+  if (!hasActiveSession) return;
+
+  const shouldResumePauseStatus = isPaused;
+
+  openOverlayModal({
     title: "Reiniciar partida",
     message: "¿Desea reiniciar la partida?",
-    confirmText: "Reiniciar",
+    actionText: "Reiniciar",
     cancelText: "Cancelar",
+    onConfirm: () => {
+      resetSession({ incrementSession: false });
+      isRunning = true;
+      isPaused = false;
+      updateHUD("ONLINE");
+    },
+    onCancel: () => {
+      updateHUD(shouldResumePauseStatus ? "Partida en pausa" : "ONLINE");
+    },
   });
-  if (!accepted) return;
-
-  resetSession({ incrementSession: false });
-  isRunning = true;
-  isPaused = false;
-  updateHUD("ONLINE");
 }
 
 function changeDifficulty(nextDifficulty) {
   if (!DIFFICULTY_CONFIG[nextDifficulty]) return;
 
   const prevDifficulty = difficulty;
+  const shouldResumePauseStatus = isPaused && hasActiveSession;
   difficulty = nextDifficulty;
 
   if (hasActiveSession) {
-    const accepted = window.confirm("Cambiar dificultad reiniciará la sesión actual. ¿Desea continuar?");
-    if (!accepted) {
-      difficulty = prevDifficulty;
-      difficultySelect.value = prevDifficulty;
-      return;
-    }
-    resetSession({ incrementSession: false });
-    isRunning = true;
-    isPaused = false;
+    openOverlayModal({
+      title: "Cambiar dificultad",
+      message: "Cambiar dificultad reiniciará la sesión actual. ¿Desea continuar?",
+      actionText: "Continuar",
+      cancelText: "Cancelar",
+      onConfirm: () => {
+        resetSession({ incrementSession: false });
+        isRunning = true;
+        isPaused = false;
+        updateHUD("ONLINE");
+      },
+      onCancel: () => {
+        difficulty = prevDifficulty;
+        difficultySelect.value = prevDifficulty;
+        updateHUD(shouldResumePauseStatus ? "Partida en pausa" : "ONLINE");
+      },
+    });
+    return;
   }
 
-  updateHUD(isPaused ? "PAUSED" : "ONLINE");
+  updateHUD(isPaused ? "Partida en pausa" : "ONLINE");
 }
 
 document.addEventListener("keydown", (e) => {
@@ -763,6 +833,30 @@ padButtons.forEach((button) => {
     setDirection(button.dataset.dir);
   });
 });
+
+
+if (overlayAction) {
+  overlayAction.addEventListener("click", () => {
+    if (overlayConfirmHandler) overlayConfirmHandler();
+    closeOverlayModal();
+  });
+}
+
+if (overlayCancel) {
+  overlayCancel.addEventListener("click", () => {
+    if (overlayCancelHandler) overlayCancelHandler();
+    closeOverlayModal();
+  });
+}
+
+if (gameModalOverlay) {
+  gameModalOverlay.addEventListener("click", (event) => {
+    if (event.target !== gameModalOverlay) return;
+    if (overlayDismissHandler) overlayDismissHandler();
+    if (overlayCancelHandler) overlayCancelHandler();
+    closeOverlayModal();
+  });
+}
 
 startBtn.addEventListener("click", newGameFlow);
 pauseBtn.addEventListener("click", togglePause);
