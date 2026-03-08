@@ -495,10 +495,6 @@ function computeProgressLevel() {
   return 1;
 }
 
-function currentProgressName() {
-  return PROGRESS_STAGES[computeProgressLevel() - 1];
-}
-
 function movementFramesPerStep() {
   const base = activeDifficulty().baseFrames;
   const progressBoost = computeProgressLevel() - 1;
@@ -519,9 +515,7 @@ function updateHUD(status) {
   movesValue.textContent = moves;
   sessionValue.textContent = String(session).padStart(3, "0");
   timeValue.textContent = formatTime(getElapsedSeconds());
-  const shieldOn = Date.now() < invulnerableUntil ? " · INV" : "";
-  const allyOn = allySnake ? ` · ALLY +${allySnake.redAppleGrowths}/${ALLY_RED_GROWTH_LIMIT}` : "";
-  levelValue.textContent = `${activeDifficulty().label} ${difficultyLevel}/${LEVELS_PER_DIFFICULTY} · ${currentProgressName()} ${applesEatenInLevel}/${APPLES_PER_LEVEL}${shieldOn}${allyOn}`;
+  levelValue.textContent = `${activeDifficulty().label} ${difficultyLevel}/${LEVELS_PER_DIFFICULTY}`;
   statusText.textContent = status;
   updateProgressChips(computeProgressLevel());
   pauseBtn.textContent = isPaused ? "Reanudar" : "Pausar";
@@ -740,7 +734,7 @@ function tick() {
   requestAnimationFrame(tick);
 
   if (!hasActiveSession) {
-    updateHUD(`LISTO · ${activeDifficulty().label.toUpperCase()}`);
+    updateHUD("LISTO");
     drawScene();
     return;
   }
@@ -917,7 +911,7 @@ function newGameFlow() {
       updateHUD("ONLINE");
       playEventSound("start");
     },
-    onCancel: () => updateHUD(shouldResumePauseStatus ? "PAUSED" : `LISTO · ${activeDifficulty().label.toUpperCase()}`),
+    onCancel: () => updateHUD(shouldResumePauseStatus ? "PAUSED" : "LISTO"),
   });
 }
 
@@ -999,7 +993,7 @@ function changeDifficulty(nextDifficulty) {
     return;
   }
 
-  updateHUD(`LISTO · ${activeDifficulty().label.toUpperCase()}`);
+  updateHUD("LISTO");
 }
 
 document.addEventListener("keydown", (e) => {
@@ -1105,5 +1099,5 @@ placeRocks();
 spawnVioletEnemies();
 createAllySnake();
 placeRedApple();
-updateHUD(`LISTO · ${activeDifficulty().label.toUpperCase()}`);
+updateHUD("LISTO");
 tick();
