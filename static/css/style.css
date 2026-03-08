@@ -119,6 +119,29 @@ body {
   gap: 0.55rem;
 }
 
+.audio-controls {
+  margin-top: 0.9rem;
+  padding: 0.9rem;
+  text-align: center;
+}
+
+.audio-btn {
+  margin: 0.55rem 0;
+}
+
+.audio-label {
+  display: block;
+  color: #f1ecbf;
+  font-size: 0.8rem;
+  margin-bottom: 0.45rem;
+  letter-spacing: 0.08em;
+}
+
+.audio-slider {
+  width: 100%;
+  accent-color: #ffe866;
+}
+
 .stat-card {
   padding: 14px;
   min-height: 88px;

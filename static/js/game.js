@@ -21,23 +21,15 @@ const gameModalTitle = document.getElementById("gameModalTitle");
 const gameModalMessage = document.getElementById("gameModalMessage");
 const overlayAction = document.getElementById("overlayAction");
 const overlayCancel = document.getElementById("overlayCancel");
+const audioToggle = document.getElementById("audioToggle");
+const audioVolume = document.getElementById("audioVolume");
 
 const DIFFICULTY_CONFIG = {
-  novato: {
-    label: "Novato", cellSize: 25, baseFrames: 8, rocks: 0, violetCount: 0, alliedSnake: false, shieldMs: 0,
-  },
-  facil: {
-    label: "Fácil", cellSize: 20, baseFrames: 7, rocks: 0, violetCount: 0, alliedSnake: false, shieldMs: 0,
-  },
-  intermedio: {
-    label: "Intermedio", cellSize: 16, baseFrames: 6, rocks: 6, violetCount: 1, alliedSnake: false, shieldMs: 0,
-  },
-  dificil: {
-    label: "Difícil", cellSize: 10, baseFrames: 5, rocks: 12, violetCount: 2, alliedSnake: true, shieldMs: 2000,
-  },
-  pesadilla: {
-    label: "Pesadilla", cellSize: 8, baseFrames: 4, rocks: 18, violetCount: 3, alliedSnake: true, shieldMs: 7000,
-  },
+  novato: { label: "Novato", cellSize: 25, baseFrames: 8, rocks: 0, violetCount: 0, alliedSnake: false, shieldMs: 0 },
+  facil: { label: "Fácil", cellSize: 20, baseFrames: 7, rocks: 0, violetCount: 0, alliedSnake: false, shieldMs: 0 },
+  intermedio: { label: "Intermedio", cellSize: 16, baseFrames: 6, rocks: 6, violetCount: 1, alliedSnake: false, shieldMs: 0 },
+  dificil: { label: "Difícil", cellSize: 10, baseFrames: 5, rocks: 12, violetCount: 2, alliedSnake: true, shieldMs: 2000 },
+  pesadilla: { label: "Pesadilla", cellSize: 8, baseFrames: 4, rocks: 18, violetCount: 3, alliedSnake: true, shieldMs: 7000 },
 };
 
 const ROCK_LIMIT = 3;
@@ -45,6 +37,8 @@ const ROCK_STUN_MS = 900;
 const VIOLET_BODY_SEGMENTS = 4;
 const VIOLET_RESPAWN_MS = 5000;
 const VIOLET_SLOW_MS = 2000;
+const ENEMY_BODY_RECOVER_MS = 2200;
+const ALLY_RED_GROWTH_LIMIT = 3;
 
 let frameCounter = 0;
 let isRunning = false;
@@ -62,7 +56,7 @@ let runStartTimestamp = 0;
 let snake;
 let allySnake = null;
 let apple;
-let shieldApple = null;
+let redApple = null;
 let violetEnemies = [];
 let rocks = [];
 
@@ -70,13 +64,68 @@ let rockHits = 0;
 let stunUntil = 0;
 let invulnerableUntil = 0;
 
-let difficulty = difficultySelect ? difficultySelect.value : "intermedio";
+let difficulty = difficultySelect ? difficultySelect.value : "novato";
 
 let touchStartX = 0;
 let touchStartY = 0;
 
+let audioCtx = null;
+let soundEnabled = true;
+let volumeLevel = 0.65;
+
+function ensureAudioContext() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audioCtx = new AC();
+  }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function playTone({ frequency = 440, duration = 0.08, type = "square", gain = 0.08 }) {
+  if (!soundEnabled) return;
+  const ac = ensureAudioContext();
+  if (!ac) return;
+  const osc = ac.createOscillator();
+  const g = ac.createGain();
+  osc.type = type;
+  osc.frequency.value = frequency;
+  g.gain.value = gain * volumeLevel;
+  osc.connect(g);
+  g.connect(ac.destination);
+  const now = ac.currentTime;
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain * volumeLevel), now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  osc.start(now);
+  osc.stop(now + duration + 0.01);
+}
+
+function playEventSound(event) {
+  const events = {
+    apple: () => {
+      playTone({ frequency: 660, duration: 0.08, type: "triangle", gain: 0.09 });
+      setTimeout(() => playTone({ frequency: 820, duration: 0.08, type: "triangle", gain: 0.08 }), 40);
+    },
+    hit: () => playTone({ frequency: 130, duration: 0.16, type: "sawtooth", gain: 0.12 }),
+    bite: () => playTone({ frequency: 220, duration: 0.07, type: "square", gain: 0.09 }),
+    pause: () => playTone({ frequency: 300, duration: 0.06, type: "triangle", gain: 0.07 }),
+    gameover: () => {
+      playTone({ frequency: 180, duration: 0.14, type: "sawtooth", gain: 0.1 });
+      setTimeout(() => playTone({ frequency: 140, duration: 0.2, type: "sawtooth", gain: 0.1 }), 80);
+    },
+    start: () => playTone({ frequency: 520, duration: 0.1, type: "square", gain: 0.08 }),
+    shield: () => playTone({ frequency: 980, duration: 0.1, type: "triangle", gain: 0.1 }),
+  };
+
+  if (events[event]) events[event]();
+}
+
 function activeDifficulty() {
-  return DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.intermedio;
+  return DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.novato;
 }
 
 function gridSize() {
@@ -109,16 +158,12 @@ function wrap(value) {
   return value;
 }
 
-function isPlayerCell(x, y) {
-  return snake.cells.some((cell) => cell.x === x && cell.y === y);
-}
-
-function isAllyCell(x, y) {
-  return allySnake ? allySnake.cells.some((cell) => cell.x === x && cell.y === y) : false;
-}
-
 function isRockCell(x, y) {
   return rocks.some((rock) => rock.x === x && rock.y === y);
+}
+
+function snakeHasCell(targetSnake, x, y) {
+  return targetSnake && targetSnake.cells.some((cell) => cell.x === x && cell.y === y);
 }
 
 function isVioletEnemyCell(x, y) {
@@ -131,8 +176,8 @@ function isVioletEnemyCell(x, y) {
 
 function occupiedForSpawn(x, y) {
   const isAppleCell = apple && apple.x === x && apple.y === y;
-  const isShieldCell = shieldApple?.active && shieldApple.x === x && shieldApple.y === y;
-  return isPlayerCell(x, y) || isAllyCell(x, y) || isRockCell(x, y) || isVioletEnemyCell(x, y) || isAppleCell || isShieldCell;
+  const isRedApple = redApple?.active && redApple.x === x && redApple.y === y;
+  return snakeHasCell(snake, x, y) || snakeHasCell(allySnake, x, y) || isRockCell(x, y) || isVioletEnemyCell(x, y) || isAppleCell || isRedApple;
 }
 
 function placeApple() {
@@ -144,17 +189,17 @@ function placeApple() {
   }
 }
 
-function placeShieldApple() {
+function placeRedApple() {
   if (!activeDifficulty().shieldMs) {
-    shieldApple = null;
+    redApple = null;
     return;
   }
 
-  shieldApple = { x: randomTile(), y: randomTile(), active: true };
+  redApple = { x: randomTile(), y: randomTile(), active: true };
   let guard = 0;
-  while (occupiedForSpawn(shieldApple.x, shieldApple.y) && guard < 2000) {
-    shieldApple.x = randomTile();
-    shieldApple.y = randomTile();
+  while (occupiedForSpawn(redApple.x, redApple.y) && guard < 2000) {
+    redApple.x = randomTile();
+    redApple.y = randomTile();
     guard += 1;
   }
 }
@@ -197,28 +242,77 @@ function createVioletEnemy() {
     moveCounter: 0,
     slowUntil: 0,
     respawnAt: 0,
+    missingSegments: 0,
+    recoverAt: 0,
   };
 }
 
 function spawnVioletEnemies() {
   violetEnemies = [];
   const qty = activeDifficulty().violetCount || 0;
-  for (let i = 0; i < qty; i += 1) {
-    violetEnemies.push(createVioletEnemy());
-  }
+  for (let i = 0; i < qty; i += 1) violetEnemies.push(createVioletEnemy());
 }
 
 function tryRespawnEnemy(enemy) {
   if (Date.now() < enemy.respawnAt) return;
-  const fresh = createVioletEnemy();
-  enemy.active = true;
-  enemy.head = fresh.head;
-  enemy.body = fresh.body;
-  enemy.dx = fresh.dx;
-  enemy.dy = fresh.dy;
-  enemy.moveCounter = 0;
-  enemy.slowUntil = 0;
-  enemy.respawnAt = 0;
+  Object.assign(enemy, createVioletEnemy());
+}
+
+function axisDistance(a, b) {
+  const size = canvas.width;
+  const direct = Math.abs(a - b);
+  return Math.min(direct, size - direct);
+}
+
+function wrappedStepToward(from, to) {
+  const g = gridSize();
+  const size = canvas.width;
+  if (from === to) return 0;
+  const plus = (to - from + size) % size;
+  const minus = (from - to + size) % size;
+  if (plus < minus) return g;
+  return -g;
+}
+
+function isEnemyFutureBody(enemy, x, y) {
+  return enemy.body.some((cell) => cell.x === x && cell.y === y);
+}
+
+function pickSmartDirection(head, currentDx, currentDy, avoidFn, targetPoints) {
+  const g = gridSize();
+  const directions = [
+    { dx: g, dy: 0 },
+    { dx: -g, dy: 0 },
+    { dx: 0, dy: g },
+    { dx: 0, dy: -g },
+  ];
+
+  const reverseDx = -currentDx;
+  const reverseDy = -currentDy;
+
+  let best = null;
+  directions.forEach((dir) => {
+    if (dir.dx === reverseDx && dir.dy === reverseDy) return;
+    const nx = wrap(head.x + dir.dx);
+    const ny = wrap(head.y + dir.dy);
+    if (avoidFn(nx, ny)) return;
+
+    const distanceScore = targetPoints.reduce((acc, target) => {
+      return acc + axisDistance(nx, target.x) + axisDistance(ny, target.y);
+    }, 0);
+
+    const straightBonus = dir.dx === currentDx && dir.dy === currentDy ? -0.4 : 0;
+    const scoreCandidate = distanceScore + straightBonus + Math.random() * 0.8;
+
+    if (!best || scoreCandidate < best.score) {
+      best = { ...dir, score: scoreCandidate };
+    }
+  });
+
+  if (best) return best;
+
+  const fallback = getRandomDirection();
+  return { dx: fallback.dx, dy: fallback.dy };
 }
 
 function moveVioletEnemy(enemy) {
@@ -227,33 +321,50 @@ function moveVioletEnemy(enemy) {
     return;
   }
 
+  const now = Date.now();
+  if (enemy.missingSegments > 0 && now >= enemy.recoverAt) {
+    enemy.missingSegments -= 1;
+    enemy.recoverAt = now + ENEMY_BODY_RECOVER_MS;
+  }
+
   const baseFrames = 7;
-  const slowed = Date.now() < enemy.slowUntil;
+  const slowed = now < enemy.slowUntil;
   const threshold = slowed ? baseFrames * 2 : baseFrames;
 
   enemy.moveCounter += 1;
   if (enemy.moveCounter < threshold) return;
   enemy.moveCounter = 0;
 
-  if (Math.random() < 0.15) {
-    const nextDir = getRandomDirection();
-    enemy.dx = nextDir.dx;
-    enemy.dy = nextDir.dy;
-  }
+  const primaryTargets = [{ x: snake.x, y: snake.y }];
+  if (allySnake) primaryTargets.push({ x: allySnake.cells[0].x, y: allySnake.cells[0].y });
 
-  let nextX = wrap(enemy.head.x + enemy.dx);
-  let nextY = wrap(enemy.head.y + enemy.dy);
+  const preferredStep = {
+    dx: wrappedStepToward(enemy.head.x, primaryTargets[0].x),
+    dy: wrappedStepToward(enemy.head.y, primaryTargets[0].y),
+  };
 
-  if (isRockCell(nextX, nextY)) {
-    const nextDir = getRandomDirection();
-    enemy.dx = nextDir.dx;
-    enemy.dy = nextDir.dy;
-    nextX = wrap(enemy.head.x + enemy.dx);
-    nextY = wrap(enemy.head.y + enemy.dy);
-  }
+  const weightedTargets = [
+    ...primaryTargets,
+    { x: wrap(enemy.head.x + preferredStep.dx), y: wrap(enemy.head.y + preferredStep.dy) },
+  ];
+
+  const nextDir = pickSmartDirection(
+    enemy.head,
+    enemy.dx,
+    enemy.dy,
+    (x, y) => isRockCell(x, y) || isEnemyFutureBody(enemy, x, y),
+    weightedTargets,
+  );
+
+  enemy.dx = nextDir.dx;
+  enemy.dy = nextDir.dy;
+
+  const nextX = wrap(enemy.head.x + enemy.dx);
+  const nextY = wrap(enemy.head.y + enemy.dy);
 
   enemy.body.unshift({ x: enemy.head.x, y: enemy.head.y });
-  enemy.body = enemy.body.slice(0, VIOLET_BODY_SEGMENTS);
+  const expectedLength = Math.max(1, VIOLET_BODY_SEGMENTS - enemy.missingSegments);
+  enemy.body = enemy.body.slice(0, expectedLength);
   enemy.head.x = nextX;
   enemy.head.y = nextY;
 }
@@ -276,6 +387,8 @@ function createAllySnake() {
       { x: wrap(start.x - g), y: start.y },
       { x: wrap(start.x - g * 2), y: start.y },
     ],
+    maxCells: 3,
+    redAppleGrowths: 0,
     dx: g,
     dy: 0,
     moveCounter: 0,
@@ -286,28 +399,34 @@ function moveAllySnake() {
   if (!allySnake) return;
 
   allySnake.moveCounter += 1;
-  if (allySnake.moveCounter < 6) return;
+  if (allySnake.moveCounter < 5) return;
   allySnake.moveCounter = 0;
 
-  if (Math.random() < 0.2) {
-    const dir = getRandomDirection();
-    allySnake.dx = dir.dx;
-    allySnake.dy = dir.dy;
-  }
+  const objectives = [{ x: apple.x, y: apple.y }];
+  if (redApple?.active && allySnake.redAppleGrowths < ALLY_RED_GROWTH_LIMIT) objectives.unshift({ x: redApple.x, y: redApple.y });
+
+  violetEnemies.forEach((enemy) => {
+    if (!enemy.active) return;
+    enemy.body.forEach((segment) => objectives.push({ x: segment.x, y: segment.y }));
+  });
 
   const head = allySnake.cells[0];
+  const dir = pickSmartDirection(
+    head,
+    allySnake.dx,
+    allySnake.dy,
+    (x, y) => isRockCell(x, y) || snakeHasCell(allySnake, x, y) || snakeHasCell(snake, x, y),
+    objectives,
+  );
+
+  allySnake.dx = dir.dx;
+  allySnake.dy = dir.dy;
+
   const nextX = wrap(head.x + allySnake.dx);
   const nextY = wrap(head.y + allySnake.dy);
 
-  if (isRockCell(nextX, nextY)) {
-    const dir = getRandomDirection();
-    allySnake.dx = dir.dx;
-    allySnake.dy = dir.dy;
-    return;
-  }
-
   allySnake.cells.unshift({ x: nextX, y: nextY });
-  allySnake.cells.pop();
+  if (allySnake.cells.length > allySnake.maxCells) allySnake.cells.pop();
 }
 
 function initializeSnake() {
@@ -326,9 +445,7 @@ function initializeSnake() {
 }
 
 function resetSession({ incrementSession }) {
-  if (incrementSession && hasActiveSession) {
-    session += 1;
-  }
+  if (incrementSession && hasActiveSession) session += 1;
 
   initializeSnake();
   createAllySnake();
@@ -343,7 +460,7 @@ function resetSession({ incrementSession }) {
   hasActiveSession = true;
 
   placeApple();
-  placeShieldApple();
+  placeRedApple();
   placeRocks();
   spawnVioletEnemies();
   updateHUD("ONLINE");
@@ -387,7 +504,8 @@ function updateHUD(status) {
   sessionValue.textContent = String(session).padStart(3, "0");
   timeValue.textContent = formatTime(getElapsedSeconds());
   const shieldOn = Date.now() < invulnerableUntil ? " · INV" : "";
-  levelValue.textContent = `${computeProgressLevel()} · ${activeDifficulty().label}${shieldOn}`;
+  const allyOn = allySnake ? ` · ALLY +${allySnake.redAppleGrowths}/${ALLY_RED_GROWTH_LIMIT}` : "";
+  levelValue.textContent = `${computeProgressLevel()} · ${activeDifficulty().label}${shieldOn}${allyOn}`;
   statusText.textContent = status;
   updateProgressChips(computeProgressLevel());
   pauseBtn.textContent = isPaused ? "Reanudar" : "Pausar";
@@ -417,9 +535,7 @@ function setDirection(dir) {
     changed = true;
   }
 
-  if (changed && isRunning && !isPaused) {
-    moves += 1;
-  }
+  if (changed && isRunning && !isPaused) moves += 1;
 }
 
 function drawCell(x, y, color) {
@@ -450,9 +566,7 @@ function drawScene() {
   rocks.forEach((rock) => drawCell(rock.x, rock.y, "#7a7a7a"));
   drawCell(apple.x, apple.y, "#ff4fd8");
 
-  if (shieldApple?.active) {
-    drawCell(shieldApple.x, shieldApple.y, "#ff2f2f");
-  }
+  if (redApple?.active) drawCell(redApple.x, redApple.y, "#ff2f2f");
 
   violetEnemies.forEach((enemy) => {
     if (!enemy.active) return;
@@ -462,7 +576,7 @@ function drawScene() {
 
   if (allySnake) {
     allySnake.cells.forEach((cell, index) => {
-      drawCell(cell.x, cell.y, index === 0 ? "#000000" : "#ffffff");
+      drawCell(cell.x, cell.y, index === 0 ? "#c2b280" : "#ff8c00");
     });
   }
 
@@ -481,6 +595,7 @@ function finishGame(status = "GAME OVER") {
   }
 
   updateHUD(status);
+  playEventSound("gameover");
 
   if (status === "GAME OVER") {
     openOverlayModal({
@@ -493,52 +608,78 @@ function finishGame(status = "GAME OVER") {
         isRunning = true;
         isPaused = false;
         updateHUD("ONLINE");
+        playEventSound("start");
       },
-      onCancel: () => {
-        updateHUD("GAME OVER");
-      },
+      onCancel: () => updateHUD("GAME OVER"),
     });
   }
 }
 
-function hitByVioletEnemy() {
-  if (Date.now() < invulnerableUntil) return;
-  snake.maxCells = Math.max(4, snake.maxCells - 2);
-  snake.cells = snake.cells.slice(0, snake.maxCells);
-  score = Math.max(0, score - 10);
-  stunUntil = Date.now() + 500;
+function shrinkSnake(targetSnake, amount, floor, hitStatus = "DAÑO") {
+  targetSnake.maxCells = Math.max(floor, targetSnake.maxCells - amount);
+  targetSnake.cells = targetSnake.cells.slice(0, targetSnake.maxCells);
+  if (targetSnake === snake) {
+    snake.x = snake.cells[0].x;
+    snake.y = snake.cells[0].y;
+    score = Math.max(0, score - 10);
+    stunUntil = Date.now() + 500;
+  }
+  updateHUD(hitStatus);
+  playEventSound("hit");
 }
 
-function resolvePlayerVsViolet() {
+function resolveBiteToEnemyBody(consumerHead) {
   violetEnemies.forEach((enemy) => {
     if (!enemy.active) return;
+    const bodyIndex = enemy.body.findIndex((cell) => consumerHead.x === cell.x && consumerHead.y === cell.y);
+    if (bodyIndex >= 0) {
+      enemy.body.splice(bodyIndex, 1);
+      enemy.missingSegments = Math.min(VIOLET_BODY_SEGMENTS - 1, enemy.missingSegments + 1);
+      enemy.slowUntil = Date.now() + VIOLET_SLOW_MS;
+      enemy.recoverAt = Date.now() + ENEMY_BODY_RECOVER_MS;
+      score += 6;
+      playEventSound("bite");
+    }
+  });
+}
+
+function resolveEnemyVsSnakes() {
+  violetEnemies.forEach((enemy) => {
+    if (!enemy.active) return;
+
+    if (enemy.head.x === snake.x && enemy.head.y === snake.y) {
+      finishGame("GAME OVER");
+      return;
+    }
+
+    const playerBodyIdx = snake.cells.slice(1).findIndex((cell) => enemy.head.x === cell.x && enemy.head.y === cell.y);
+    if (playerBodyIdx >= 0 && Date.now() >= invulnerableUntil) {
+      shrinkSnake(snake, 1, 4, "MORDIDA ENEMIGA");
+    }
+
+    if (allySnake) {
+      const allyHead = allySnake.cells[0];
+      if (enemy.head.x === allyHead.x && enemy.head.y === allyHead.y) {
+        shrinkSnake(allySnake, 1, 2, "ALIADA HERIDA");
+      }
+      const allyBodyIdx = allySnake.cells.slice(1).findIndex((cell) => enemy.head.x === cell.x && enemy.head.y === cell.y);
+      if (allyBodyIdx >= 0) {
+        shrinkSnake(allySnake, 1, 2, "ALIADA HERIDA");
+      }
+    }
 
     if (snake.x === enemy.head.x && snake.y === enemy.head.y) {
       score += 20;
       enemy.active = false;
       enemy.respawnAt = Date.now() + VIOLET_RESPAWN_MS;
-      return;
-    }
-
-    const bodyIndex = enemy.body.findIndex((cell) => snake.x === cell.x && snake.y === cell.y);
-    if (bodyIndex >= 0) {
-      enemy.body.splice(bodyIndex, 1);
-      score += 5;
-      enemy.slowUntil = Date.now() + VIOLET_SLOW_MS;
-      while (enemy.body.length < VIOLET_BODY_SEGMENTS) {
-        const tail = enemy.body[enemy.body.length - 1] || enemy.head;
-        enemy.body.push({ x: tail.x, y: tail.y });
-      }
-    }
-
-    if (enemy.head.x === snake.x && enemy.head.y === snake.y) {
-      hitByVioletEnemy();
+      playEventSound("hit");
     }
   });
 }
 
 function handleRockCollision() {
   rockHits += 1;
+  playEventSound("hit");
   if (rockHits >= ROCK_LIMIT) {
     finishGame("GAME OVER");
     return;
@@ -552,7 +693,7 @@ function tick() {
   requestAnimationFrame(tick);
 
   if (!hasActiveSession) {
-    updateHUD("OFFLINE");
+    updateHUD(`LISTO · ${activeDifficulty().label.toUpperCase()}`);
     drawScene();
     return;
   }
@@ -587,9 +728,7 @@ function tick() {
   snake.y = nextY;
 
   snake.cells.unshift({ x: snake.x, y: snake.y });
-  if (snake.cells.length > snake.maxCells) {
-    snake.cells.pop();
-  }
+  if (snake.cells.length > snake.maxCells) snake.cells.pop();
 
   for (let i = 1; i < snake.cells.length; i += 1) {
     if (snake.x === snake.cells[i].x && snake.y === snake.cells[i].y) {
@@ -606,22 +745,39 @@ function tick() {
       localStorage.setItem("datacrawlBest", String(best));
     }
     placeApple();
+    playEventSound("apple");
   }
 
-  if (shieldApple?.active && snake.x === shieldApple.x && snake.y === shieldApple.y) {
-    invulnerableUntil = Date.now() + activeDifficulty().shieldMs;
-    shieldApple.active = false;
-    setTimeout(() => {
-      if (!hasActiveSession || !activeDifficulty().shieldMs) return;
-      placeShieldApple();
-    }, 6000);
+  if (redApple?.active) {
+    if (snake.x === redApple.x && snake.y === redApple.y) {
+      invulnerableUntil = Date.now() + activeDifficulty().shieldMs;
+      redApple.active = false;
+      playEventSound("shield");
+      setTimeout(() => {
+        if (!hasActiveSession || !activeDifficulty().shieldMs) return;
+        placeRedApple();
+      }, 6000);
+    }
+
+    if (allySnake && allySnake.cells[0].x === redApple.x && allySnake.cells[0].y === redApple.y && allySnake.redAppleGrowths < ALLY_RED_GROWTH_LIMIT) {
+      allySnake.redAppleGrowths += 1;
+      allySnake.maxCells += 1;
+      redApple.active = false;
+      score += 5;
+      playEventSound("apple");
+      setTimeout(() => {
+        if (!hasActiveSession || !activeDifficulty().shieldMs) return;
+        placeRedApple();
+      }, 6000);
+    }
   }
 
-  resolvePlayerVsViolet();
+  resolveBiteToEnemyBody({ x: snake.x, y: snake.y });
+  if (allySnake) resolveBiteToEnemyBody(allySnake.cells[0]);
+  resolveEnemyVsSnakes();
 
   updateHUD(Date.now() < invulnerableUntil ? "SHIELD" : "ONLINE");
 }
-
 
 let overlayConfirmHandler = null;
 let overlayCancelHandler = null;
@@ -633,9 +789,7 @@ function closeOverlayModal() {
   gameModalOverlay.classList.remove("is-open");
   gameModalOverlay.setAttribute("aria-hidden", "true");
 
-  if (overlayKeydownHandler) {
-    document.removeEventListener("keydown", overlayKeydownHandler);
-  }
+  if (overlayKeydownHandler) document.removeEventListener("keydown", overlayKeydownHandler);
 
   overlayConfirmHandler = null;
   overlayCancelHandler = null;
@@ -687,7 +841,7 @@ function newGameFlow() {
   const shouldResumePauseStatus = isPaused && hasActiveSession;
 
   openOverlayModal({
-    title: "Nueva partida",
+    title: `Nueva partida · ${activeDifficulty().label}`,
     message: "¿Desea iniciar una partida?",
     actionText: "Iniciar",
     cancelText: "Cancelar",
@@ -696,10 +850,9 @@ function newGameFlow() {
       isRunning = true;
       isPaused = false;
       updateHUD("ONLINE");
+      playEventSound("start");
     },
-    onCancel: () => {
-      updateHUD(shouldResumePauseStatus ? "PAUSED" : "ONLINE");
-    },
+    onCancel: () => updateHUD(shouldResumePauseStatus ? "PAUSED" : `LISTO · ${activeDifficulty().label.toUpperCase()}`),
   });
 }
 
@@ -709,6 +862,7 @@ function togglePause() {
   if (!isPaused && isRunning) {
     elapsedBeforePauseMs += Date.now() - runStartTimestamp;
     isPaused = true;
+    playEventSound("pause");
   }
 
   if (!isPaused) return;
@@ -725,10 +879,9 @@ function togglePause() {
       isPaused = false;
       isRunning = true;
       updateHUD("ONLINE");
+      playEventSound("pause");
     },
-    onCancel: () => {
-      updateHUD("PAUSED");
-    },
+    onCancel: () => updateHUD("PAUSED"),
   });
 }
 
@@ -747,10 +900,9 @@ function restartGame() {
       isRunning = true;
       isPaused = false;
       updateHUD("ONLINE");
+      playEventSound("start");
     },
-    onCancel: () => {
-      updateHUD(shouldResumePauseStatus ? "PAUSED" : "ONLINE");
-    },
+    onCancel: () => updateHUD(shouldResumePauseStatus ? "PAUSED" : "ONLINE"),
   });
 }
 
@@ -782,7 +934,7 @@ function changeDifficulty(nextDifficulty) {
     return;
   }
 
-  updateHUD(isPaused ? "PAUSED" : "ONLINE");
+  updateHUD(`LISTO · ${activeDifficulty().label.toUpperCase()}`);
 }
 
 document.addEventListener("keydown", (e) => {
@@ -829,11 +981,22 @@ canvas.addEventListener("touchend", (event) => {
 }, { passive: true });
 
 padButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    setDirection(button.dataset.dir);
-  });
+  button.addEventListener("click", () => setDirection(button.dataset.dir));
 });
 
+if (audioToggle) {
+  audioToggle.addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    audioToggle.textContent = soundEnabled ? "🔊 Sonido activo" : "🔈 Sonido apagado";
+    if (soundEnabled) playEventSound("start");
+  });
+}
+
+if (audioVolume) {
+  audioVolume.addEventListener("input", (event) => {
+    volumeLevel = Number(event.target.value) / 100;
+  });
+}
 
 if (overlayAction) {
   overlayAction.addEventListener("click", () => {
@@ -869,15 +1032,13 @@ if (difficultySelect) {
   });
 }
 
-if (yearEl) {
-  yearEl.textContent = new Date().getFullYear();
-}
+if (yearEl) yearEl.textContent = new Date().getFullYear();
 
 initializeSnake();
 placeApple();
 placeRocks();
 spawnVioletEnemies();
 createAllySnake();
-placeShieldApple();
-updateHUD("OFFLINE");
+placeRedApple();
+updateHUD(`LISTO · ${activeDifficulty().label.toUpperCase()}`);
 tick();

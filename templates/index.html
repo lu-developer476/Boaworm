@@ -52,6 +52,13 @@
           <p id="levelValue" class="value">1</p>
         </article>
       </section>
+
+      <section class="audio-controls neon-card" aria-label="Audio del juego">
+        <p class="label">AUDIO</p>
+        <button id="audioToggle" class="action-btn muted audio-btn" type="button">🔊 Sonido activo</button>
+        <label for="audioVolume" class="audio-label">Volumen</label>
+        <input id="audioVolume" type="range" min="0" max="100" value="65" class="audio-slider" aria-label="Control de volumen">
+      </section>
     </aside>
 
     <section class="main-panel neon-card">
@@ -98,9 +105,9 @@
       <div class="actions neon-card">
         <label class="difficulty-picker" for="difficultySelect">Dificultad</label>
         <select id="difficultySelect" class="difficulty-select" aria-label="Elegir nivel de dificultad">
-          <option value="novato">Novato</option>
+          <option value="novato" selected>Novato</option>
           <option value="facil">Fácil</option>
-          <option value="intermedio" selected>Intermedio</option>
+          <option value="intermedio">Intermedio</option>
           <option value="dificil">Difícil</option>
           <option value="pesadilla">Pesadilla</option>
         </select>
