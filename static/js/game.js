@@ -488,7 +488,7 @@ function finishGame(status = "GAME OVER") {
   if (status === "GAME OVER") {
     openOverlayModal({
       title: "Game Over",
-      message: "Tu ejecución terminó. ¿Querés jugar otra vez?",
+      message: "LA partida terminó. ¿Querés jugar otra vez?",
       actionText: "Jugar otra vez",
       cancelText: "Cancelar",
       onConfirm: () => {
@@ -563,7 +563,7 @@ function tick() {
   drawScene();
 
   if (!isRunning || isPaused) {
-    updateHUD(isPaused ? "Partida en pausa" : "ONLINE");
+    updateHUD(isPaused ? "PAUSED" : "ONLINE");
     return;
   }
 
@@ -622,7 +622,7 @@ function tick() {
 
   resolvePlayerVsViolet();
 
-  updateHUD(Date.now() < invulnerableUntil ? "INVULNERABLE" : "ONLINE");
+  updateHUD(Date.now() < invulnerableUntil ? "SHIELD" : "ONLINE");
 }
 
 
@@ -701,7 +701,7 @@ function newGameFlow() {
       updateHUD("ONLINE");
     },
     onCancel: () => {
-      updateHUD(shouldResumePauseStatus ? "Partida en pausa" : "ONLINE");
+      updateHUD(shouldResumePauseStatus ? "PAUSED" : "ONLINE");
     },
   });
 }
@@ -716,9 +716,9 @@ function togglePause() {
 
   if (!isPaused) return;
 
-  updateHUD("Partida en pausa");
+  updateHUD("PAUSED");
   openOverlayModal({
-    title: "Partida en pausa",
+    title: "PAUSED",
     message: 'El juego está detenido. Presioná "Reanudar" para continuar.',
     actionText: "Reanudar",
     hideCancel: true,
@@ -730,7 +730,7 @@ function togglePause() {
       updateHUD("ONLINE");
     },
     onCancel: () => {
-      updateHUD("Partida en pausa");
+      updateHUD("PAUSED");
     },
   });
 }
@@ -752,7 +752,7 @@ function restartGame() {
       updateHUD("ONLINE");
     },
     onCancel: () => {
-      updateHUD(shouldResumePauseStatus ? "Partida en pausa" : "ONLINE");
+      updateHUD(shouldResumePauseStatus ? "PAUSED" : "ONLINE");
     },
   });
 }
@@ -767,7 +767,7 @@ function changeDifficulty(nextDifficulty) {
   if (hasActiveSession) {
     openOverlayModal({
       title: "Cambiar dificultad",
-      message: "Cambiar dificultad reiniciará la sesión actual. ¿Desea continuar?",
+      message: "Se reiniciará la partida. ¿Continuar?",
       actionText: "Continuar",
       cancelText: "Cancelar",
       onConfirm: () => {
@@ -779,13 +779,13 @@ function changeDifficulty(nextDifficulty) {
       onCancel: () => {
         difficulty = prevDifficulty;
         difficultySelect.value = prevDifficulty;
-        updateHUD(shouldResumePauseStatus ? "Partida en pausa" : "ONLINE");
+        updateHUD(shouldResumePauseStatus ? "PAUSED" : "ONLINE");
       },
     });
     return;
   }
 
-  updateHUD(isPaused ? "Partida en pausa" : "ONLINE");
+  updateHUD(isPaused ? "PAUSED" : "ONLINE");
 }
 
 document.addEventListener("keydown", (e) => {
