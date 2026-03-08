@@ -1,6 +1,5 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-ctx.imageSmoothingEnabled = false;
 
 const scoreValue = document.getElementById("scoreValue");
 const bestValue = document.getElementById("bestValue");
@@ -434,27 +433,17 @@ function drawCell(x, y, color) {
 
 function drawBoardGrid() {
   const g = gridSize();
-  const edge = canvas.width - 1;
-
-  ctx.strokeStyle = "rgba(237, 200, 80, 0.52)";
-  ctx.lineWidth = 1;
-
+  ctx.strokeStyle = "rgba(237, 200, 80, 0.42)";
   for (let i = 0; i <= canvas.width; i += g) {
-    const offset = i + 0.5;
-
     ctx.beginPath();
-    ctx.moveTo(offset, 0);
-    ctx.lineTo(offset, canvas.height);
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i, canvas.height);
     ctx.stroke();
-
     ctx.beginPath();
-    ctx.moveTo(0, offset);
-    ctx.lineTo(canvas.width, offset);
+    ctx.moveTo(0, i);
+    ctx.lineTo(canvas.width, i);
     ctx.stroke();
   }
-
-  ctx.strokeStyle = "rgba(237, 200, 80, 0.82)";
-  ctx.strokeRect(0.5, 0.5, edge, edge);
 }
 
 function drawScene() {
@@ -499,7 +488,7 @@ function finishGame(status = "GAME OVER") {
   if (status === "GAME OVER") {
     openOverlayModal({
       title: "Game Over",
-      message: "LA partida terminó. ¿Querés jugar otra vez?",
+      message: "La partida terminó. ¿Querés jugar otra vez?",
       actionText: "Jugar otra vez",
       cancelText: "Cancelar",
       onConfirm: () => {
