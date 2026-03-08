@@ -84,7 +84,7 @@ function gridSize() {
 }
 
 function tileCount() {
-  return canvas.width / gridSize();
+  return Math.floor(canvas.width / gridSize());
 }
 
 function randomTile() {
@@ -157,9 +157,6 @@ function placeShieldApple() {
     shieldApple.y = randomTile();
     guard += 1;
   }
-
-  allySnake.cells.unshift({ x: nextX, y: nextY });
-  allySnake.cells.pop();
 }
 
 function placeRocks() {
