@@ -1,4 +1,4 @@
-# DATACRAWL Edgerunners Edition
+# Boaworm Edgerunners Edition
 
 ![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Scrapy](https://img.shields.io/badge/Scrapy-Web%20Crawler-60A839?style=for-the-badge&logo=scrapy&logoColor=white)
