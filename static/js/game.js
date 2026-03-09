@@ -79,6 +79,7 @@ let touchStartY = 0;
 let audioCtx = null;
 let soundEnabled = true;
 let volumeLevel = 1;
+let audioUnlocked = false;
 
 function audioPercentLabel() {
   return `${Math.round(volumeLevel * 100)}%`;
@@ -103,10 +104,36 @@ function ensureAudioContext() {
   return audioCtx;
 }
 
+function unlockAudio() {
+  const ac = ensureAudioContext();
+  if (!ac) return;
+
+  const markUnlocked = () => {
+    audioUnlocked = true;
+  };
+
+  if (ac.state === "running") {
+    markUnlocked();
+    return;
+  }
+
+  ac.resume().then(markUnlocked).catch(() => {
+    audioUnlocked = false;
+  });
+}
+
+function registerAudioUnlockEvents() {
+  const unlockEvents = ["pointerdown", "touchstart", "click", "keydown"];
+  unlockEvents.forEach((eventName) => {
+    document.addEventListener(eventName, unlockAudio, { once: true, passive: true });
+  });
+}
+
 function playTone({ frequency = 440, duration = 0.08, type = "square", gain = 0.08 }) {
   if (!soundEnabled) return;
   const ac = ensureAudioContext();
   if (!ac) return;
+  if (ac.state !== "running" && !audioUnlocked) return;
   const osc = ac.createOscillator();
   const g = ac.createGain();
   osc.type = type;
@@ -1104,6 +1131,7 @@ if (difficultySelect) {
 }
 
 if (yearEl) yearEl.textContent = new Date().getFullYear();
+registerAudioUnlockEvents();
 updateAudioToggleLabel();
 
 initializeSnake();
