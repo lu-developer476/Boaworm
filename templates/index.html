@@ -14,15 +14,24 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
+  <nav class="game-navbar panel-glow" aria-label="Navegación del juego">
+    <a href="#gameArea">Tablero</a>
+    <a href="#hudPanel">HUD</a>
+    <a href="#actionsPanel">Acciones</a>
+    <a href="#rankingPanel">Ranking</a>
+  </nav>
+
   <main class="layout">
-    <aside class="left-panel">
-      <div class="brand-box panel-glow">
+    <details class="control-drawer" open>
+      <summary class="drawer-toggle">☰ Panel de juego</summary>
+      <aside id="hudPanel" class="left-panel">
+        <div class="brand-box panel-glow">
         <p class="eyebrow">ARCADE PROTOCOLS</p>
         <h1>BOAWORM <span>EDGERUNNERS EDITION</span></h1>
         <p class="tagline">Desarrolla al gusano en su 100% para alcanzar la puntuación máxima o superá el último récord.</p>
-      </div>
+        </div>
 
-      <section class="stats-grid" aria-label="Métricas del juego">
+        <section class="stats-grid" aria-label="Métricas del juego">
         <article class="stat-card neon-card">
           <p class="label">SCORE</p>
           <p id="scoreValue" class="value">0</p>
@@ -51,17 +60,18 @@
           <p class="label">LEVEL</p>
           <p id="levelValue" class="value">1</p>
         </article>
-      </section>
+        </section>
 
-      <section class="audio-controls neon-card" aria-label="Audio del juego">
+        <section class="audio-controls neon-card" aria-label="Audio del juego">
         <p class="label">AUDIO</p>
         <button id="audioToggle" class="action-btn muted audio-btn" type="button">🔊 Sonido activo</button>
         <label for="audioVolume" class="audio-label">Volumen</label>
         <input id="audioVolume" type="range" min="0" max="100" value="100" class="audio-slider" aria-label="Control de volumen">
-      </section>
-    </aside>
+        </section>
+      </aside>
+    </details>
 
-    <section class="main-panel neon-card">
+    <section id="gameArea" class="main-panel neon-card">
       <div class="board-shell">
         <div class="scanlines"></div>
         <canvas id="game" width="400" height="400" aria-label="Tablero de juego"></canvas>
@@ -78,13 +88,13 @@
       </div>
 
       <section class="mobile-pad" aria-label="Controles táctiles">
-      <button class="pad-btn" data-dir="up">▲</button>
-      <div>
-        <button class="pad-btn" data-dir="left">◀</button>
-        <button class="pad-btn" data-dir="down">▼</button>
-        <button class="pad-btn" data-dir="right">▶</button>
-      </div>
-    </section>
+        <button class="pad-btn" data-dir="up">▲</button>
+        <div>
+          <button class="pad-btn" data-dir="left">◀</button>
+          <button class="pad-btn" data-dir="down">▼</button>
+          <button class="pad-btn" data-dir="right">▶</button>
+        </div>
+      </section>
 
       <div class="chip-row-wrap">
         <p>PROGRESS</p>
@@ -95,11 +105,11 @@
           <span class="chip stage stage-4" data-level="4">BREACH</span>
           <span class="chip stage stage-5" data-level="5">OVERDRIVE</span>
         </div>
-      </div>
-    </section>
+        </div>
+      </section>
 
     <section class="bottom-panels">
-      <div class="actions neon-card">
+      <div id="actionsPanel" class="actions neon-card">
         <label class="difficulty-picker" for="difficultySelect">Dificultad</label>
         <select id="difficultySelect" class="difficulty-select" aria-label="Elegir nivel de dificultad">
           <option value="novato" selected>Novato</option>
@@ -120,12 +130,12 @@
         <p class="centered-copy">Sobreviví, crecé y superá tu score más alto.</p>
       </div>
 
-      <div class="leaderboard neon-card">
+      <div id="rankingPanel" class="leaderboard neon-card">
         <p class="eyebrow">ONLINE RANKING</p>
         <h2>Top Players</h2>
         <p>Todavía no hay puntajes cargados. Sé el primero en dejar tu marca.</p>
-      </div>
-    </section>
+        </div>
+      </section>
   </main>
 
   <footer class="footer">

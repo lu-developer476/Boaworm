@@ -26,13 +26,12 @@
 * { box-sizing: border-box; }
 
 html {
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
-  height: 100dvh;
   min-height: 100vh;
   font-family: "Orbitron", sans-serif;
   background:
@@ -42,13 +41,38 @@ body {
     var(--bg);
   color: #f5f1db;
   padding: clamp(0.28rem, 0.85vw, 0.8rem);
-  overflow: hidden;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
 
 @supports (height: 100dvh) {
   body { min-height: 100dvh; }
+}
+
+.game-navbar {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto clamp(0.25rem, 0.55vw, 0.5rem);
+  padding: clamp(0.28rem, 0.55vw, 0.55rem);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.22rem, 0.5vw, 0.5rem);
+}
+
+.game-navbar a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(255, 232, 102, 0.95), rgba(184, 255, 53, 0.9));
+  color: #101010;
+  font-size: clamp(0.62rem, 0.82vw, 0.82rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
 }
 
 .layout {
@@ -58,11 +82,10 @@ body {
   display: grid;
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
   grid-template-columns: clamp(220px, 19vw, 270px) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-areas:
-    "left main"
+    "drawer main"
     "bottom bottom";
   gap: clamp(0.25rem, 0.55vw, 0.5rem);
   align-items: stretch;
@@ -76,8 +99,34 @@ body {
   box-shadow: 0 0 26px rgba(237, 200, 80, 0.26), 0 0 18px rgba(184, 255, 53, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.58);
 }
 
+.control-drawer {
+  grid-area: drawer;
+  min-width: 0;
+}
+
+.drawer-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin-bottom: clamp(0.25rem, 0.55vw, 0.45rem);
+  border: 1px solid rgba(255, 232, 102, 0.85);
+  border-radius: clamp(12px, 1.2vw, 18px);
+  background: linear-gradient(120deg, rgba(255, 232, 102, 0.95), rgba(184, 255, 53, 0.92));
+  color: #101010;
+  cursor: pointer;
+  font-size: clamp(0.72rem, 0.95vw, 0.92rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  list-style: none;
+  text-align: center;
+}
+
+.drawer-toggle::-webkit-details-marker { display: none; }
+
+.control-drawer:not([open]) .drawer-toggle { margin-bottom: 0; }
+
 .left-panel {
-  grid-area: left;
   display: flex;
   flex-direction: column;
 }
@@ -199,7 +248,7 @@ body {
 .board-shell {
   position: relative;
   width: 100%;
-  max-width: min(920px, calc(100dvh - 9.5rem));
+  max-width: min(680px, calc(100dvh - 13rem), 56vw);
   border-radius: 0;
   border: 1px solid rgba(237, 200, 80, 0.8);
   background: rgba(28, 17, 3, 0.86);
@@ -581,7 +630,7 @@ body {
     grid-template-columns: clamp(200px, 21vw, 250px) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) auto;
     grid-template-areas:
-      "left main"
+      "drawer main"
       "bottom bottom";
   }
 
@@ -593,7 +642,7 @@ body {
     padding: 0.35rem;
   }
   .bottom-panels { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .board-shell { width: min(100%, calc(100dvh - 11.25rem)); }
+  .board-shell { width: min(100%, calc(100dvh - 14rem), 58vw); }
 }
 
 @media (max-width: 820px) {
@@ -601,7 +650,7 @@ body {
     grid-template-columns: 1fr;
     grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
-      "left"
+      "drawer"
       "main"
       "bottom";
   }
@@ -647,7 +696,7 @@ body {
   }
 
   .board-shell {
-    width: min(100%, calc(100dvh - 21.5rem));
+    width: min(100%, calc(100dvh - 18rem));
     padding: 0.25rem;
   }
 
@@ -737,5 +786,66 @@ body {
     margin-top: 0.18rem;
     padding-top: 1px;
     font-size: 0.56rem;
+  }
+}
+
+@media (max-width: 1140px) {
+  .game-navbar {
+    position: sticky;
+    top: 0.25rem;
+    z-index: 20;
+  }
+
+  .control-drawer {
+    max-height: 34dvh;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 820px) {
+  body {
+    overflow-y: auto;
+  }
+
+  .game-navbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .control-drawer {
+    max-height: 42dvh;
+  }
+
+  .left-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 0.3rem;
+  }
+
+  .brand-box,
+  .audio-controls {
+    margin: 0;
+  }
+
+  .stats-grid {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
+
+@media (max-width: 520px) {
+  .left-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat-wide {
+    grid-column: 1 / -1;
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
   }
 }
