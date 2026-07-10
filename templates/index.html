@@ -14,13 +14,6 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-  <nav class="game-navbar panel-glow" aria-label="Navegación del juego">
-    <a href="#gameArea">Tablero</a>
-    <a href="#hudPanel">HUD</a>
-    <a href="#actionsPanel">Acciones</a>
-    <a href="#rankingPanel">Ranking</a>
-  </nav>
-
   <main class="layout">
     <details class="control-drawer" open>
       <summary class="drawer-toggle">☰ Panel de juego</summary>
@@ -68,6 +61,20 @@
         <label for="audioVolume" class="audio-label">Volumen</label>
         <input id="audioVolume" type="range" min="0" max="100" value="100" class="audio-slider" aria-label="Control de volumen">
         </section>
+
+        <section id="actionsPanel" class="actions neon-card" aria-label="Acciones del juego">
+          <label class="difficulty-picker" for="difficultySelect">Dificultad</label>
+          <select id="difficultySelect" class="difficulty-select" aria-label="Elegir nivel de dificultad">
+            <option value="novato" selected>Novato</option>
+            <option value="facil">Fácil</option>
+            <option value="intermedio">Intermedio</option>
+            <option value="dificil">Difícil</option>
+            <option value="pesadilla">Pesadilla</option>
+          </select>
+          <button id="startBtn" class="action-btn primary" type="button">Nueva partida</button>
+          <button id="pauseBtn" class="action-btn muted" type="button">Pausar</button>
+          <button id="restartBtn" class="action-btn danger" type="button">Reiniciar</button>
+        </section>
       </aside>
     </details>
 
@@ -96,57 +103,9 @@
         </div>
       </section>
 
-      <div class="chip-row-wrap">
-        <p>PROGRESS</p>
-        <div class="chip-row" id="progressChips" aria-label="Fases de progresión de la partida">
-          <span class="chip stage stage-1" data-level="1">TRACE</span>
-          <span class="chip stage stage-2" data-level="2">SPLICE</span>
-          <span class="chip stage stage-3" data-level="3">RUSH</span>
-          <span class="chip stage stage-4" data-level="4">BREACH</span>
-          <span class="chip stage stage-5" data-level="5">OVERDRIVE</span>
-        </div>
-        </div>
-      </section>
+    </section>
 
-    <section class="bottom-panels">
-      <div id="actionsPanel" class="actions neon-card">
-        <label class="difficulty-picker" for="difficultySelect">Dificultad</label>
-        <select id="difficultySelect" class="difficulty-select" aria-label="Elegir nivel de dificultad">
-          <option value="novato" selected>Novato</option>
-          <option value="facil">Fácil</option>
-          <option value="intermedio">Intermedio</option>
-          <option value="dificil">Difícil</option>
-          <option value="pesadilla">Pesadilla</option>
-        </select>
-        <button id="startBtn" class="action-btn primary">Nueva partida</button>
-        <button id="pauseBtn" class="action-btn muted">Pausar</button>
-        <button id="restartBtn" class="action-btn danger">Reiniciar</button>
-      </div>
-
-      <div class="info neon-card">
-        <h2>Controles:</h2>
-        <p class="centered-copy">↑ ↓ ← → · WASD</p>
-        <h2>Objetivo:</h2>
-        <p class="centered-copy">Sobreviví, crecé y superá tu score más alto.</p>
-      </div>
-
-      <div id="rankingPanel" class="leaderboard neon-card">
-        <p class="eyebrow">ONLINE RANKING</p>
-        <h2>Top Players</h2>
-        <p>Todavía no hay puntajes cargados. Sé el primero en dejar tu marca.</p>
-        </div>
-      </section>
   </main>
-
-  <footer class="footer">
-    <span class="footer-item">© <span id="year"></span> Todos los derechos reservados</span>
-    <span class="footer-separator" aria-hidden="true">•</span>
-    <span class="footer-item">Built with Python &amp; Django</span>
-    <span class="footer-separator" aria-hidden="true">•</span>
-    <span class="footer-item">UX/UI Interface</span>
-    <span class="footer-separator" aria-hidden="true">•</span>
-    <span class="footer-item">Deployed on Render ®</span>
-  </footer>
 
   <script src="{% static 'js/game.js' %}"></script>
 </body>
