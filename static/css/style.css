@@ -356,7 +356,8 @@ body {
 }
 
 .play-menu .action-btn,
-.play-menu-btn {
+.play-menu-btn,
+.speed-menu-btn {
   min-height: 34px;
   border-radius: 999px;
 }
@@ -460,6 +461,30 @@ body {
   opacity: 1;
   box-shadow: 0 0 18px rgba(255, 232, 102, 0.8);
   border-color: rgba(255, 232, 102, 0.95);
+}
+
+.speed-levels-panel {
+  margin-top: clamp(0.28rem, 0.55vw, 0.55rem);
+  padding-top: clamp(0.22rem, 0.45vw, 0.4rem);
+  border-top: 1px solid rgba(255, 232, 102, 0.28);
+}
+
+.speed-levels-title {
+  margin: 0 0 clamp(0.22rem, 0.45vw, 0.42rem);
+  color: #f1ecbf;
+  font-size: clamp(0.44rem, 0.56vw, 0.62rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.speed-levels-panel .chip-row {
+  gap: clamp(0.16rem, 0.28vw, 0.28rem);
+}
+
+.speed-levels-panel .chip {
+  min-width: calc(50% - 0.2rem);
+  padding: clamp(0.18rem, 0.34vw, 0.32rem) clamp(0.24rem, 0.42vw, 0.44rem);
+  font-size: clamp(0.46rem, 0.6vw, 0.64rem);
 }
 
 .bottom-panels {

@@ -14,6 +14,8 @@ const progressChips = document.querySelectorAll("#progressChips .chip");
 const playMenuBtn = document.getElementById("playMenuBtn");
 const playMenuOverlay = document.getElementById("playMenuOverlay");
 const playMenuClose = document.getElementById("playMenuClose");
+const speedMenuBtn = document.getElementById("speedMenuBtn");
+const speedLevelsPanel = document.getElementById("speedLevelsPanel");
 const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const restartBtn = document.getElementById("restartBtn");
@@ -569,9 +571,18 @@ function movementFramesPerStep() {
 function updateProgressChips(level) {
   progressChips.forEach((chip) => {
     const chipLevel = Number(chip.dataset.level);
+    const frames = Math.max(1, activeDifficulty().baseFrames - (chipLevel - 1));
     chip.classList.toggle("is-reached", chipLevel <= level);
     chip.classList.toggle("is-current", chipLevel === level);
+    chip.title = `Velocidad ${chipLevel}: avance cada ${frames} frame${frames === 1 ? "" : "s"}`;
   });
+}
+
+function toggleSpeedLevels() {
+  if (!speedMenuBtn || !speedLevelsPanel) return;
+  const willOpen = speedLevelsPanel.hidden;
+  speedLevelsPanel.hidden = !willOpen;
+  speedMenuBtn.setAttribute("aria-expanded", String(willOpen));
 }
 
 function updateHUD(status) {
@@ -1166,6 +1177,7 @@ if (gameModalOverlay) {
 }
 
 if (playMenuBtn) playMenuBtn.addEventListener("click", openPlayMenu);
+if (speedMenuBtn) speedMenuBtn.addEventListener("click", toggleSpeedLevels);
 if (playMenuClose) playMenuClose.addEventListener("click", closePlayMenu);
 if (playMenuOverlay) {
   playMenuOverlay.addEventListener("click", (event) => {
