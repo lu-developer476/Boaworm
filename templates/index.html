@@ -62,18 +62,8 @@
         <input id="audioVolume" type="range" min="0" max="100" value="100" class="audio-slider" aria-label="Control de volumen">
         </section>
 
-        <section id="actionsPanel" class="actions neon-card" aria-label="Acciones del juego">
-          <label class="difficulty-picker" for="difficultySelect">Dificultad</label>
-          <select id="difficultySelect" class="difficulty-select" aria-label="Elegir nivel de dificultad">
-            <option value="novato" selected>Novato</option>
-            <option value="facil">Fácil</option>
-            <option value="intermedio">Intermedio</option>
-            <option value="dificil">Difícil</option>
-            <option value="pesadilla">Pesadilla</option>
-          </select>
-          <button id="startBtn" class="action-btn primary" type="button">Nueva partida</button>
-          <button id="pauseBtn" class="action-btn muted" type="button">Pausar</button>
-          <button id="restartBtn" class="action-btn danger" type="button">Reiniciar</button>
+        <section class="actions neon-card" aria-label="Menú del juego">
+          <button id="playMenuBtn" class="action-btn primary play-menu-btn" type="button" aria-haspopup="dialog" aria-controls="playMenuOverlay">Jugar</button>
         </section>
       </aside>
     </details>
@@ -81,7 +71,24 @@
     <section id="gameArea" class="main-panel neon-card">
       <div class="board-shell">
         <div class="scanlines"></div>
-        <canvas id="game" width="400" height="400" aria-label="Tablero de juego"></canvas>
+        <canvas id="game" width="800" height="800" aria-label="Tablero de juego"></canvas>
+        <div id="playMenuOverlay" class="play-menu-overlay" aria-hidden="true">
+          <div class="play-menu panel-glow" role="dialog" aria-modal="true" aria-labelledby="playMenuTitle">
+            <button id="playMenuClose" class="play-menu-close" type="button" aria-label="Cerrar menú de juego">×</button>
+            <h3 id="playMenuTitle" class="play-menu-title">Dificultad</h3>
+            <label class="difficulty-picker" for="difficultySelect">Dificultad</label>
+            <select id="difficultySelect" class="difficulty-select" aria-label="Elegir nivel de dificultad">
+              <option value="novato" selected>Novato</option>
+              <option value="facil">Fácil</option>
+              <option value="intermedio">Intermedio</option>
+              <option value="dificil">Difícil</option>
+              <option value="pesadilla">Pesadilla</option>
+            </select>
+            <button id="startBtn" class="action-btn primary" type="button">Nueva partida</button>
+            <button id="pauseBtn" class="action-btn muted" type="button">Pausar</button>
+            <button id="restartBtn" class="action-btn danger" type="button">Reiniciar</button>
+          </div>
+        </div>
         <div id="gameModalOverlay" class="game-modal-overlay" aria-hidden="true">
           <div class="game-modal panel-glow" role="dialog" aria-modal="true" aria-labelledby="gameModalTitle">
             <h3 id="gameModalTitle" class="game-modal-title">Confirmación</h3>

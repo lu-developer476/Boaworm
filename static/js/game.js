@@ -11,6 +11,9 @@ const levelValue = document.getElementById("levelValue");
 const yearEl = document.getElementById("year");
 const progressChips = document.querySelectorAll("#progressChips .chip");
 
+const playMenuBtn = document.getElementById("playMenuBtn");
+const playMenuOverlay = document.getElementById("playMenuOverlay");
+const playMenuClose = document.getElementById("playMenuClose");
 const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const restartBtn = document.getElementById("restartBtn");
@@ -881,6 +884,18 @@ let overlayCancelHandler = null;
 let overlayKeydownHandler = null;
 let overlayDismissHandler = null;
 
+function closePlayMenu() {
+  if (!playMenuOverlay) return;
+  playMenuOverlay.classList.remove("is-open");
+  playMenuOverlay.setAttribute("aria-hidden", "true");
+}
+
+function openPlayMenu() {
+  if (!playMenuOverlay) return;
+  playMenuOverlay.classList.add("is-open");
+  playMenuOverlay.setAttribute("aria-hidden", "false");
+}
+
 function closeOverlayModal() {
   if (!gameModalOverlay) return;
   gameModalOverlay.classList.remove("is-open");
@@ -1052,6 +1067,12 @@ document.addEventListener("keydown", (e) => {
     setDirection(dir);
   }
 
+  if (e.key === "Escape" && playMenuOverlay?.classList.contains("is-open")) {
+    e.preventDefault();
+    closePlayMenu();
+    return;
+  }
+
   if (e.key === " ") {
     e.preventDefault();
     togglePause();
@@ -1120,12 +1141,29 @@ if (gameModalOverlay) {
   });
 }
 
-startBtn.addEventListener("click", newGameFlow);
-pauseBtn.addEventListener("click", togglePause);
-restartBtn.addEventListener("click", restartGame);
+if (playMenuBtn) playMenuBtn.addEventListener("click", openPlayMenu);
+if (playMenuClose) playMenuClose.addEventListener("click", closePlayMenu);
+if (playMenuOverlay) {
+  playMenuOverlay.addEventListener("click", (event) => {
+    if (event.target === playMenuOverlay) closePlayMenu();
+  });
+}
+startBtn.addEventListener("click", () => {
+  closePlayMenu();
+  newGameFlow();
+});
+pauseBtn.addEventListener("click", () => {
+  closePlayMenu();
+  togglePause();
+});
+restartBtn.addEventListener("click", () => {
+  closePlayMenu();
+  restartGame();
+});
 
 if (difficultySelect) {
   difficultySelect.addEventListener("change", (event) => {
+    closePlayMenu();
     changeDifficulty(event.target.value);
   });
 }
