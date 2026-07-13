@@ -89,13 +89,10 @@ function syncCanvasToBoard() {
   if (!shell) return;
   const style = getComputedStyle(shell);
   const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-  const verticalPadding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
   const g = gridSize();
   const nextWidth = Math.max(g * 12, Math.floor((shell.clientWidth - horizontalPadding) / g) * g);
-  const nextHeight = Math.max(g * 12, Math.floor((shell.clientHeight - verticalPadding) / g) * g);
-  if (canvas.width === nextWidth && canvas.height === nextHeight) return;
+  if (canvas.width === nextWidth) return;
   canvas.width = nextWidth;
-  canvas.height = nextHeight;
 }
 
 const boardResizeObserver = window.ResizeObserver ? new ResizeObserver(syncCanvasToBoard) : null;
