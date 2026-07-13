@@ -772,6 +772,7 @@ body {
     grid-template-areas:
       "drawer"
       "main";
+    flex: 0 1 auto;
   }
 
   .left-panel {
@@ -966,7 +967,17 @@ body {
   }
 
   .control-drawer {
-    max-height: 42dvh;
+    max-height: 34dvh;
+  }
+
+  .control-drawer[open] + .main-panel {
+    margin-bottom: 0.55rem;
+  }
+
+  .control-drawer[open] + .main-panel .board-shell {
+    flex-basis: min(42dvh, 78vw);
+    min-height: min(34dvh, 78vw);
+    max-height: min(42dvh, 78vw);
   }
 
   .left-panel {
@@ -987,6 +998,17 @@ body {
 }
 
 @media (max-width: 520px) {
+  .control-drawer[open] + .main-panel .board-shell {
+    flex-basis: min(38dvh, 92vw);
+    min-height: min(30dvh, 92vw);
+    max-height: min(38dvh, 92vw);
+  }
+
+  .control-drawer[open] + .main-panel .mobile-pad {
+    margin-top: 0.22rem;
+    padding-block: 0.22rem;
+  }
+
   .left-panel {
     grid-template-columns: 1fr;
   }
