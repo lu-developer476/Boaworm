@@ -82,7 +82,7 @@ body {
   display: grid;
   flex: 1 1 auto;
   min-height: 0;
-  grid-template-columns: clamp(190px, 17vw, 240px) minmax(0, 1fr);
+  grid-template-columns: clamp(170px, 14vw, 220px) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   grid-template-areas: "drawer main";
   gap: clamp(0.18rem, 0.42vw, 0.38rem);
@@ -250,7 +250,7 @@ body {
 .board-shell {
   position: relative;
   width: 100%;
-  max-width: min(680px, calc(100dvh - 13rem), 56vw);
+  max-width: min(900px, calc(100dvh - 5.5rem), 76vw);
   border-radius: 0;
   border: 1px solid rgba(237, 200, 80, 0.8);
   background: rgba(28, 17, 3, 0.86);
@@ -286,6 +286,75 @@ body {
 }
 
 .chip-row-wrap { text-align: center; margin-top: clamp(0.35rem, 0.8vw, 0.6rem); }
+
+
+.play-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(8, 6, 1, 0.58);
+  backdrop-filter: blur(3px);
+}
+
+.play-menu-overlay.is-open {
+  display: flex;
+}
+
+.play-menu {
+  position: relative;
+  width: min(92vw, 300px);
+  padding: 0.72rem 0.58rem 0.64rem;
+  text-align: center;
+  border-radius: 16px;
+}
+
+.play-menu-title {
+  margin: 0 2rem 0.38rem;
+  color: #ffe866;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.play-menu-close {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.45rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 232, 102, 0.16);
+  color: #ffe866;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.play-menu .difficulty-picker {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.play-menu .difficulty-select {
+  margin-bottom: 0.5rem;
+  border-radius: 999px;
+}
+
+.play-menu .action-btn,
+.play-menu-btn {
+  min-height: 34px;
+  border-radius: 999px;
+}
 
 .game-modal-overlay {
   position: absolute;
@@ -613,7 +682,7 @@ body {
   }
 
   .board-shell {
-    width: min(100%, calc(100dvh - 10.75rem));
+    width: min(100%, calc(100dvh - 5.5rem), 78vw);
   }
 
 
@@ -637,7 +706,7 @@ body {
     margin-top: 0.28rem;
     padding: 0.35rem;
   }
-  .board-shell { width: min(100%, calc(100dvh - 14rem), 58vw); }
+  .board-shell { width: min(100%, calc(100dvh - 8rem), 72vw); }
 }
 
 @media (max-width: 820px) {
@@ -690,7 +759,7 @@ body {
   }
 
   .board-shell {
-    width: min(100%, calc(100dvh - 18rem));
+    width: min(100%, calc(100dvh - 14rem));
     padding: 0.25rem;
   }
 
