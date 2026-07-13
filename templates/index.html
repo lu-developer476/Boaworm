@@ -64,17 +64,7 @@
 
         <section class="actions neon-card" aria-label="Menú del juego">
           <button id="playMenuBtn" class="action-btn primary play-menu-btn" type="button" aria-haspopup="dialog" aria-controls="playMenuOverlay">Jugar</button>
-          <button id="speedMenuBtn" class="action-btn muted speed-menu-btn" type="button" aria-expanded="false" aria-controls="speedLevelsPanel">Velocidad</button>
-          <div id="speedLevelsPanel" class="speed-levels-panel" hidden>
-            <p class="speed-levels-title">Niveles por puntos</p>
-            <div id="progressChips" class="chip-row" aria-label="Niveles de velocidad por progreso">
-              <span class="chip stage-1" data-level="1">1 Base</span>
-              <span class="chip stage-2" data-level="2">2 +2 pts</span>
-              <span class="chip stage-3" data-level="3">3 +4 pts</span>
-              <span class="chip stage-4" data-level="4">4 +6 pts</span>
-              <span class="chip stage-5" data-level="5">5 +8 pts</span>
-            </div>
-          </div>
+          <button id="speedMenuBtn" class="action-btn muted speed-menu-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="speedMenuOverlay">Velocidad</button>
         </section>
       </aside>
     </details>
@@ -98,6 +88,23 @@
             <button id="startBtn" class="action-btn primary" type="button">Nueva partida</button>
             <button id="pauseBtn" class="action-btn muted" type="button">Pausar</button>
             <button id="restartBtn" class="action-btn danger" type="button">Reiniciar</button>
+          </div>
+        </div>
+        <div id="speedMenuOverlay" class="speed-menu-overlay" aria-hidden="true">
+          <div class="speed-menu panel-glow" role="dialog" aria-modal="true" aria-labelledby="speedMenuTitle">
+            <button id="speedMenuClose" class="play-menu-close" type="button" aria-label="Cerrar menú de velocidad">×</button>
+            <h3 id="speedMenuTitle" class="play-menu-title">Velocidad</h3>
+            <p class="speed-menu-copy">Títulos originales del proyecto y velocidad correspondiente.</p>
+            <div id="progressChips" class="speed-list" aria-label="Títulos originales y niveles de velocidad">
+              <span class="chip stage-1" data-level="1"><strong>START</strong><small>Velocidad 1</small></span>
+              <span class="chip stage-2" data-level="2"><strong>TRACE</strong><small>Velocidad 2</small></span>
+              <span class="chip stage-3" data-level="3"><strong>SEARCH</strong><small>Velocidad 3</small></span>
+              <span class="chip stage-4" data-level="4"><strong>SPLICE</strong><small>Velocidad 4</small></span>
+              <span class="chip stage-5" data-level="5"><strong>RUSH</strong><small>Velocidad 5</small></span>
+              <span class="chip stage-6" data-level="6"><strong>BREACH</strong><small>Velocidad 6</small></span>
+              <span class="chip stage-7" data-level="7"><strong>OVERDRIVE</strong><small>Velocidad 7</small></span>
+              <span class="chip stage-8" data-level="8"><strong>LEGEND</strong><small>Velocidad 8</small></span>
+            </div>
           </div>
         </div>
         <div id="gameModalOverlay" class="game-modal-overlay" aria-hidden="true">

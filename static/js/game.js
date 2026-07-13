@@ -15,7 +15,8 @@ const playMenuBtn = document.getElementById("playMenuBtn");
 const playMenuOverlay = document.getElementById("playMenuOverlay");
 const playMenuClose = document.getElementById("playMenuClose");
 const speedMenuBtn = document.getElementById("speedMenuBtn");
-const speedLevelsPanel = document.getElementById("speedLevelsPanel");
+const speedMenuOverlay = document.getElementById("speedMenuOverlay");
+const speedMenuClose = document.getElementById("speedMenuClose");
 const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const restartBtn = document.getElementById("restartBtn");
@@ -48,7 +49,7 @@ const APPLES_PER_LEVEL = 10;
 const APPLES_PER_BODY_GROWTH = 2;
 const LEVELS_PER_DIFFICULTY = 5;
 
-const PROGRESS_STAGES = ["TRACE", "SPLICE", "RUSH", "BREACH", "OVERDRIVE"];
+const PROGRESS_STAGES = ["START", "TRACE", "SEARCH", "SPLICE", "RUSH", "BREACH", "OVERDRIVE", "LEGEND"];
 
 let frameCounter = 0;
 let isRunning = false;
@@ -574,15 +575,27 @@ function updateProgressChips(level) {
     const frames = Math.max(1, activeDifficulty().baseFrames - (chipLevel - 1));
     chip.classList.toggle("is-reached", chipLevel <= level);
     chip.classList.toggle("is-current", chipLevel === level);
-    chip.title = `Velocidad ${chipLevel}: avance cada ${frames} frame${frames === 1 ? "" : "s"}`;
+    const title = PROGRESS_STAGES[chipLevel - 1] || `Nivel ${chipLevel}`;
+    const speedText = `Velocidad ${chipLevel}`;
+    const detailText = `avance cada ${frames} frame${frames === 1 ? "" : "s"}`;
+    const label = chip.querySelector("strong");
+    const detail = chip.querySelector("small");
+    if (label) label.textContent = title;
+    if (detail) detail.textContent = `${speedText} · ${detailText}`;
+    chip.title = `${title}: ${speedText}, ${detailText}`;
   });
 }
 
+function setSpeedMenuOpen(isOpen) {
+  if (!speedMenuBtn || !speedMenuOverlay) return;
+  speedMenuOverlay.classList.toggle("is-open", isOpen);
+  speedMenuOverlay.setAttribute("aria-hidden", String(!isOpen));
+  speedMenuBtn.setAttribute("aria-expanded", String(isOpen));
+}
+
 function toggleSpeedLevels() {
-  if (!speedMenuBtn || !speedLevelsPanel) return;
-  const willOpen = speedLevelsPanel.hidden;
-  speedLevelsPanel.hidden = !willOpen;
-  speedMenuBtn.setAttribute("aria-expanded", String(willOpen));
+  if (!speedMenuOverlay) return;
+  setSpeedMenuOpen(!speedMenuOverlay.classList.contains("is-open"));
 }
 
 function updateHUD(status) {
@@ -1108,6 +1121,12 @@ document.addEventListener("keydown", (e) => {
     return;
   }
 
+  if (e.key === "Escape" && speedMenuOverlay?.classList.contains("is-open")) {
+    e.preventDefault();
+    setSpeedMenuOpen(false);
+    return;
+  }
+
   if (e.key === " ") {
     e.preventDefault();
     togglePause();
@@ -1178,6 +1197,12 @@ if (gameModalOverlay) {
 
 if (playMenuBtn) playMenuBtn.addEventListener("click", openPlayMenu);
 if (speedMenuBtn) speedMenuBtn.addEventListener("click", toggleSpeedLevels);
+if (speedMenuClose) speedMenuClose.addEventListener("click", () => setSpeedMenuOpen(false));
+if (speedMenuOverlay) {
+  speedMenuOverlay.addEventListener("click", (event) => {
+    if (event.target === speedMenuOverlay) setSpeedMenuOpen(false);
+  });
+}
 if (playMenuClose) playMenuClose.addEventListener("click", closePlayMenu);
 if (playMenuOverlay) {
   playMenuOverlay.addEventListener("click", (event) => {
