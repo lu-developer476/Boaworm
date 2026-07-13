@@ -84,6 +84,27 @@ let soundEnabled = true;
 let volumeLevel = 1;
 let audioUnlocked = false;
 
+function syncCanvasToBoard() {
+  const shell = canvas.closest(".board-shell");
+  if (!shell) return;
+  const style = getComputedStyle(shell);
+  const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+  const verticalPadding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+  const g = gridSize();
+  const nextWidth = Math.max(g * 12, Math.floor((shell.clientWidth - horizontalPadding) / g) * g);
+  const nextHeight = Math.max(g * 12, Math.floor((shell.clientHeight - verticalPadding) / g) * g);
+  if (canvas.width === nextWidth && canvas.height === nextHeight) return;
+  canvas.width = nextWidth;
+  canvas.height = nextHeight;
+}
+
+const boardResizeObserver = window.ResizeObserver ? new ResizeObserver(syncCanvasToBoard) : null;
+if (boardResizeObserver) {
+  const boardShell = canvas.closest(".board-shell");
+  if (boardShell) boardResizeObserver.observe(boardShell);
+}
+window.addEventListener("resize", syncCanvasToBoard);
+
 function audioPercentLabel() {
   return `${Math.round(volumeLevel * 100)}%`;
 }
@@ -180,12 +201,13 @@ function gridSize() {
   return activeDifficulty().cellSize;
 }
 
-function tileCount() {
-  return Math.floor(canvas.width / gridSize());
+function tileCount(axis = "x") {
+  const size = axis === "y" ? canvas.height : canvas.width;
+  return Math.floor(size / gridSize());
 }
 
-function randomTile() {
-  return Math.floor(Math.random() * tileCount()) * gridSize();
+function randomTile(axis = "x") {
+  return Math.floor(Math.random() * tileCount(axis)) * gridSize();
 }
 
 function getRandomDirection() {
@@ -199,10 +221,11 @@ function getRandomDirection() {
   return dirs[Math.floor(Math.random() * dirs.length)];
 }
 
-function wrap(value) {
+function wrap(value, axis = "x") {
   const g = gridSize();
-  if (value < 0) return canvas.width - g;
-  if (value >= canvas.width) return 0;
+  const size = axis === "y" ? canvas.height : canvas.width;
+  if (value < 0) return size - g;
+  if (value >= size) return 0;
   return value;
 }
 
@@ -229,10 +252,10 @@ function occupiedForSpawn(x, y) {
 }
 
 function placeApple() {
-  apple = { x: randomTile(), y: randomTile() };
+  apple = { x: randomTile("x"), y: randomTile("y") };
   let guard = 0;
   while (occupiedForSpawn(apple.x, apple.y) && guard < 2000) {
-    apple = { x: randomTile(), y: randomTile() };
+    apple = { x: randomTile("x"), y: randomTile("y") };
     guard += 1;
   }
 }
@@ -243,11 +266,11 @@ function placeRedApple() {
     return;
   }
 
-  redApple = { x: randomTile(), y: randomTile(), active: true };
+  redApple = { x: randomTile("x"), y: randomTile("y"), active: true };
   let guard = 0;
   while (occupiedForSpawn(redApple.x, redApple.y) && guard < 2000) {
-    redApple.x = randomTile();
-    redApple.y = randomTile();
+    redApple.x = randomTile("x");
+    redApple.y = randomTile("y");
     guard += 1;
   }
 }
@@ -257,7 +280,7 @@ function placeRocks() {
   const rockTotal = activeDifficulty().rocks || 0;
   let guard = 0;
   while (rocks.length < rockTotal && guard < 5000) {
-    const candidate = { x: randomTile(), y: randomTile() };
+    const candidate = { x: randomTile("x"), y: randomTile("y") };
     guard += 1;
     if (occupiedForSpawn(candidate.x, candidate.y)) continue;
     rocks.push(candidate);
@@ -265,11 +288,11 @@ function placeRocks() {
 }
 
 function createVioletEnemy() {
-  const head = { x: randomTile(), y: randomTile() };
+  const head = { x: randomTile("x"), y: randomTile("y") };
   let guard = 0;
   while (occupiedForSpawn(head.x, head.y) && guard < 2000) {
-    head.x = randomTile();
-    head.y = randomTile();
+    head.x = randomTile("x");
+    head.y = randomTile("y");
     guard += 1;
   }
 
@@ -277,7 +300,7 @@ function createVioletEnemy() {
   let currentX = head.x;
   let currentY = head.y;
   for (let i = 0; i < VIOLET_BODY_SEGMENTS; i += 1) {
-    currentX = wrap(currentX - gridSize());
+    currentX = wrap(currentX - gridSize(), "x");
     body.push({ x: currentX, y: currentY });
   }
 
@@ -306,15 +329,15 @@ function tryRespawnEnemy(enemy) {
   Object.assign(enemy, createVioletEnemy());
 }
 
-function axisDistance(a, b) {
-  const size = canvas.width;
+function axisDistance(a, b, axis = "x") {
+  const size = axis === "y" ? canvas.height : canvas.width;
   const direct = Math.abs(a - b);
   return Math.min(direct, size - direct);
 }
 
-function wrappedStepToward(from, to) {
+function wrappedStepToward(from, to, axis = "x") {
   const g = gridSize();
-  const size = canvas.width;
+  const size = axis === "y" ? canvas.height : canvas.width;
   if (from === to) return 0;
   const plus = (to - from + size) % size;
   const minus = (from - to + size) % size;
@@ -341,12 +364,12 @@ function pickSmartDirection(head, currentDx, currentDy, avoidFn, targetPoints) {
   let best = null;
   directions.forEach((dir) => {
     if (dir.dx === reverseDx && dir.dy === reverseDy) return;
-    const nx = wrap(head.x + dir.dx);
-    const ny = wrap(head.y + dir.dy);
+    const nx = wrap(head.x + dir.dx, "x");
+    const ny = wrap(head.y + dir.dy, "y");
     if (avoidFn(nx, ny)) return;
 
     const distanceScore = targetPoints.reduce((acc, target) => {
-      return acc + axisDistance(nx, target.x) + axisDistance(ny, target.y);
+      return acc + axisDistance(nx, target.x, "x") + axisDistance(ny, target.y, "y");
     }, 0);
 
     const straightBonus = dir.dx === currentDx && dir.dy === currentDy ? -0.4 : 0;
@@ -387,13 +410,13 @@ function moveVioletEnemy(enemy) {
   if (allySnake) primaryTargets.push({ x: allySnake.cells[0].x, y: allySnake.cells[0].y });
 
   const preferredStep = {
-    dx: wrappedStepToward(enemy.head.x, primaryTargets[0].x),
-    dy: wrappedStepToward(enemy.head.y, primaryTargets[0].y),
+    dx: wrappedStepToward(enemy.head.x, primaryTargets[0].x, "x"),
+    dy: wrappedStepToward(enemy.head.y, primaryTargets[0].y, "y"),
   };
 
   const weightedTargets = [
     ...primaryTargets,
-    { x: wrap(enemy.head.x + preferredStep.dx), y: wrap(enemy.head.y + preferredStep.dy) },
+    { x: wrap(enemy.head.x + preferredStep.dx, "x"), y: wrap(enemy.head.y + preferredStep.dy, "y") },
   ];
 
   const nextDir = pickSmartDirection(
@@ -407,8 +430,8 @@ function moveVioletEnemy(enemy) {
   enemy.dx = nextDir.dx;
   enemy.dy = nextDir.dy;
 
-  const nextX = wrap(enemy.head.x + enemy.dx);
-  const nextY = wrap(enemy.head.y + enemy.dy);
+  const nextX = wrap(enemy.head.x + enemy.dx, "x");
+  const nextY = wrap(enemy.head.y + enemy.dy, "y");
 
   enemy.body.unshift({ x: enemy.head.x, y: enemy.head.y });
   const expectedLength = Math.max(1, VIOLET_BODY_SEGMENTS - enemy.missingSegments);
@@ -426,14 +449,14 @@ function createAllySnake() {
   const g = gridSize();
   const start = {
     x: Math.floor(tileCount() / 3) * g,
-    y: Math.floor(tileCount() / 3) * g,
+    y: Math.floor(tileCount("y") / 3) * g,
   };
 
   allySnake = {
     cells: [
       { x: start.x, y: start.y },
-      { x: wrap(start.x - g), y: start.y },
-      { x: wrap(start.x - g * 2), y: start.y },
+      { x: wrap(start.x - g, "x"), y: start.y },
+      { x: wrap(start.x - g * 2, "x"), y: start.y },
     ],
     maxCells: 3,
     redAppleGrowths: 0,
@@ -470,8 +493,8 @@ function moveAllySnake() {
   allySnake.dx = dir.dx;
   allySnake.dy = dir.dy;
 
-  const nextX = wrap(head.x + allySnake.dx);
-  const nextY = wrap(head.y + allySnake.dy);
+  const nextX = wrap(head.x + allySnake.dx, "x");
+  const nextY = wrap(head.y + allySnake.dy, "y");
 
   allySnake.cells.unshift({ x: nextX, y: nextY });
   if (allySnake.cells.length > allySnake.maxCells) allySnake.cells.pop();
@@ -480,7 +503,7 @@ function moveAllySnake() {
 function initializeSnake() {
   const g = gridSize();
   const startX = Math.floor(tileCount() / 2) * g;
-  const startY = Math.floor(tileCount() / 2) * g;
+  const startY = Math.floor(tileCount("y") / 2) * g;
 
   snake = {
     x: startX,
@@ -495,6 +518,7 @@ function initializeSnake() {
 function resetSession({ incrementSession }) {
   if (incrementSession && hasActiveSession) session += 1;
 
+  syncCanvasToBoard();
   initializeSnake();
   createAllySnake();
   frameCounter = 0;
@@ -804,8 +828,8 @@ function tick() {
   if (++frameCounter < movementFramesPerStep()) return;
   frameCounter = 0;
 
-  const nextX = wrap(snake.x + snake.dx);
-  const nextY = wrap(snake.y + snake.dy);
+  const nextX = wrap(snake.x + snake.dx, "x");
+  const nextY = wrap(snake.y + snake.dy, "y");
 
   if (isRockCell(nextX, nextY)) {
     handleRockCollision();
@@ -1172,6 +1196,7 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 registerAudioUnlockEvents();
 updateAudioToggleLabel();
 
+syncCanvasToBoard();
 initializeSnake();
 placeApple();
 placeRocks();
