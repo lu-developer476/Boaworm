@@ -630,7 +630,9 @@ body {
 .mobile-pad {
   grid-area: mobile;
   display: none;
+  flex: 0 0 auto;
   text-align: center;
+  touch-action: manipulation;
 }
 .mobile-pad > div { display: flex; justify-content: center; gap: 0.5rem; }
 .pad-btn {
@@ -641,6 +643,13 @@ body {
   color: #111;
   border-radius: 12px;
   margin: 0.25rem;
+  font-family: inherit;
+  font-size: 1.3rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 0 14px rgba(184, 255, 53, 0.28), inset 0 0 12px rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .footer {
@@ -802,12 +811,38 @@ body {
   .main-panel {
     min-height: 0;
     padding: 0.28rem;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .board-shell {
+    flex: 1 1 min(62dvh, 78vw);
     width: 100%;
-    min-height: min(78vw, 100%);
+    min-height: min(52dvh, 78vw);
+    max-height: min(62dvh, 78vw);
+  }
+
+  .mobile-pad {
+    display: grid;
+    justify-items: center;
+    gap: 0.2rem;
+    width: min(100%, 360px);
+    margin: 0.42rem auto 0;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid rgba(255, 232, 102, 0.7);
+    border-radius: 16px;
+    background: linear-gradient(140deg, rgba(36, 18, 3, 0.82), rgba(24, 12, 2, 0.9));
+    box-shadow: 0 0 18px rgba(237, 200, 80, 0.18);
+  }
+
+  .mobile-pad > div {
+    gap: 0.35rem;
+  }
+
+  .pad-btn {
+    width: clamp(56px, 12vw, 74px);
+    height: clamp(46px, 8vw, 58px);
+    margin: 0;
+    font-size: clamp(1.15rem, 3.2vw, 1.55rem);
   }
 
   .chip-row-wrap p {
@@ -865,13 +900,27 @@ body {
 
 @media (max-width: 700px) {
   body { padding: 0.45rem; }
-  .mobile-pad { display: block; }
-  .pad-btn {
-    width: 42px;
-    height: 30px;
-    margin: 0.08rem;
+  .mobile-pad {
+    display: grid;
+    width: min(100%, 300px);
+    margin-top: 0.32rem;
+    padding: 0.28rem 0.35rem;
   }
-  .mobile-pad > div { gap: 0.1rem; }
+  .pad-btn {
+    width: clamp(48px, 16vw, 58px);
+    height: clamp(38px, 11vw, 46px);
+    margin: 0;
+    font-size: clamp(1rem, 5vw, 1.25rem);
+  }
+  .mobile-pad > div { gap: 0.18rem; }
+}
+
+@media (max-width: 520px) {
+  .board-shell {
+    flex-basis: min(56dvh, 92vw);
+    min-height: min(46dvh, 92vw);
+    max-height: min(56dvh, 92vw);
+  }
 }
 
 @media (max-height: 720px) and (min-width: 821px) {
