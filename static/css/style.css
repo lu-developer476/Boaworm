@@ -8,6 +8,7 @@
   --neon-green: #b8ff35;
   --neon-lime: #7dff3a;
   --board-size: 100%;
+  --board-height: min(72dvh, 640px);
 
   /* 2048 original palette */
   --tile-2: #eee4da;
@@ -136,7 +137,7 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: stretch;
+  justify-content: flex-start;
   align-self: stretch;
   height: 100%;
 }
@@ -249,9 +250,10 @@ body {
 
 .board-shell {
   position: relative;
-  flex: 1 1 auto;
+  flex: 0 1 var(--board-height);
   width: 100%;
   max-width: none;
+  height: var(--board-height);
   min-height: 0;
   border-radius: 0;
   border: 1px solid rgba(237, 200, 80, 0.8);
@@ -682,6 +684,7 @@ body {
 
   .board-shell {
     width: 100%;
+    --board-height: min(70dvh, 620px);
   }
 
 
@@ -759,7 +762,9 @@ body {
 
   .board-shell {
     width: 100%;
-    min-height: min(100vw, calc(100dvh - 14rem));
+    --board-height: min(62dvh, calc(100dvh - 14rem));
+    height: var(--board-height);
+    min-height: min(78vw, var(--board-height));
     padding: 0.25rem;
   }
 
