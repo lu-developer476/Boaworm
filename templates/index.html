@@ -64,6 +64,17 @@
 
         <section class="actions neon-card" aria-label="Menú del juego">
           <button id="playMenuBtn" class="action-btn primary play-menu-btn" type="button" aria-haspopup="dialog" aria-controls="playMenuOverlay">Jugar</button>
+          <button id="speedMenuBtn" class="action-btn muted speed-menu-btn" type="button" aria-expanded="false" aria-controls="speedLevelsPanel">Velocidad</button>
+          <div id="speedLevelsPanel" class="speed-levels-panel" hidden>
+            <p class="speed-levels-title">Niveles por puntos</p>
+            <div id="progressChips" class="chip-row" aria-label="Niveles de velocidad por progreso">
+              <span class="chip stage-1" data-level="1">1 Base</span>
+              <span class="chip stage-2" data-level="2">2 +2 pts</span>
+              <span class="chip stage-3" data-level="3">3 +4 pts</span>
+              <span class="chip stage-4" data-level="4">4 +6 pts</span>
+              <span class="chip stage-5" data-level="5">5 +8 pts</span>
+            </div>
+          </div>
         </section>
       </aside>
     </details>
