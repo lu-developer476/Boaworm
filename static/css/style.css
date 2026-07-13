@@ -40,7 +40,7 @@ body {
     radial-gradient(circle at 45% 100%, rgba(125, 255, 58, 0.2), transparent 45%),
     var(--bg);
   color: #f5f1db;
-  padding: clamp(0.28rem, 0.85vw, 0.8rem);
+  padding: clamp(0.18rem, 0.6vw, 0.55rem);
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
@@ -82,19 +82,19 @@ body {
   display: grid;
   flex: 1 1 auto;
   min-height: 0;
-  grid-template-columns: clamp(220px, 19vw, 270px) minmax(0, 1fr);
+  grid-template-columns: clamp(190px, 17vw, 240px) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   grid-template-areas: "drawer main";
-  gap: clamp(0.25rem, 0.55vw, 0.5rem);
+  gap: clamp(0.18rem, 0.42vw, 0.38rem);
   align-items: stretch;
 }
 
 .neon-card,
 .panel-glow {
   border: 1px solid var(--stroke);
-  border-radius: clamp(14px, 1.5vw, 24px);
+  border-radius: clamp(10px, 1.05vw, 18px);
   background: linear-gradient(140deg, var(--panel), var(--panel-2));
-  box-shadow: 0 0 26px rgba(237, 200, 80, 0.26), 0 0 18px rgba(184, 255, 53, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.58);
+  box-shadow: 0 0 18px rgba(237, 200, 80, 0.22), 0 0 12px rgba(184, 255, 53, 0.16), inset 0 0 14px rgba(0, 0, 0, 0.52);
 }
 
 .control-drawer {
@@ -131,7 +131,7 @@ body {
 
 .main-panel {
   grid-area: main;
-  padding: clamp(0.45rem, 0.85vw, 0.85rem);
+  padding: clamp(0.32rem, 0.62vw, 0.62rem);
   width: 100%;
   min-width: 0;
   display: flex;
@@ -144,7 +144,7 @@ body {
 .bottom-panels { grid-area: bottom; width: 100%; }
 
 .brand-box {
-  padding: clamp(0.38rem, 0.7vw, 0.65rem);
+  padding: clamp(0.25rem, 0.52vw, 0.48rem);
   text-align: center;
   margin-bottom: clamp(0.3rem, 0.55vw, 0.45rem);
 }
@@ -154,13 +154,13 @@ body {
   color: #ffe866;
   font-weight: 700;
   letter-spacing: 0.24em;
-  font-size: clamp(0.48rem, 0.65vw, 0.72rem);
+  font-size: clamp(0.44rem, 0.56vw, 0.62rem);
 }
 
 .brand-box h1 {
   margin: clamp(0.2rem, 0.4vw, 0.45rem) 0 0;
   font-family: 'Orbitron', sans-serif;
-  font-size: clamp(1.05rem, 2.15vw, 2.05rem);
+  font-size: clamp(0.9rem, 1.75vw, 1.65rem);
   letter-spacing: 0.11em;
   line-height: 0.95;
   color: #fff;
@@ -171,26 +171,26 @@ body {
   display: block;
   margin-top: clamp(0.18rem, 0.4vw, 0.38rem);
   color: #ffe866;
-  font-size: clamp(0.48rem, 0.78vw, 0.82rem);
+  font-size: clamp(0.42rem, 0.62vw, 0.68rem);
   letter-spacing: 0.11em;
 }
 
 .tagline {
   margin: clamp(0.25rem, 0.5vw, 0.45rem) 0 0;
   color: #d8d5c7;
-  line-height: 1.25;
-  font-size: clamp(0.52rem, 0.75vw, 0.76rem);
+  line-height: 1.15;
+  font-size: clamp(0.46rem, 0.62vw, 0.64rem);
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(0.2rem, 0.38vw, 0.34rem);
+  gap: clamp(0.14rem, 0.28vw, 0.26rem);
 }
 
 .audio-controls {
   margin-top: clamp(0.28rem, 0.55vw, 0.55rem);
-  padding: clamp(0.35rem, 0.65vw, 0.6rem);
+  padding: clamp(0.24rem, 0.48vw, 0.45rem);
   text-align: center;
 }
 
@@ -220,8 +220,8 @@ body {
 }
 
 .stat-card {
-  padding: clamp(0.25rem, 0.55vw, 0.52rem);
-  min-height: clamp(36px, 5.5vh, 54px);
+  padding: clamp(0.18rem, 0.42vw, 0.4rem);
+  min-height: clamp(30px, 4.5vh, 44px);
   border-radius: clamp(10px, 1vw, 16px);
   display: flex;
   flex-direction: column;
@@ -232,14 +232,14 @@ body {
 
 .label {
   margin: 0;
-  font-size: clamp(0.48rem, 0.65vw, 0.72rem);
+  font-size: clamp(0.44rem, 0.56vw, 0.62rem);
   color: #111;
   letter-spacing: 0.22em;
 }
 
 .value {
   margin: clamp(0.1rem, 0.25vw, 0.28rem) 0 0;
-  font-size: clamp(0.8rem, 1.25vw, 1.2rem);
+  font-size: clamp(0.68rem, 1vw, 1rem);
   font-weight: 700;
   color: #000;
 }
@@ -399,7 +399,7 @@ body {
 .actions,
 .info,
 .leaderboard {
-  padding: clamp(0.45rem, 0.75vw, 0.65rem);
+  padding: clamp(0.32rem, 0.58vw, 0.5rem);
   min-height: 0;
 }
 
@@ -452,7 +452,7 @@ body {
   padding: clamp(0.38rem, 0.65vw, 0.62rem);
   margin-bottom: clamp(0.28rem, 0.55vw, 0.55rem);
   font-family: inherit;
-  font-size: clamp(0.68rem, 0.9vw, 0.88rem);
+  font-size: clamp(0.6rem, 0.76vw, 0.78rem);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-align: center;
@@ -491,11 +491,11 @@ body {
   width: 100%;
   border: 0;
   border-radius: 20px;
-  padding: clamp(0.42rem, 0.7vw, 0.58rem) 0.7rem;
+  padding: clamp(0.32rem, 0.52vw, 0.46rem) 0.55rem;
   margin-bottom: 0.32rem;
   font-family: inherit;
   font-weight: 700;
-  font-size: clamp(0.78rem, 1.1vw, 0.95rem);
+  font-size: clamp(0.68rem, 0.9vw, 0.82rem);
   cursor: pointer;
   color: #101010;
 }
